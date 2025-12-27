@@ -1,0 +1,245 @@
+# depswiz
+
+**Dependency Wizard** - A multi-language dependency management CLI tool for modern development workflows.
+
+[![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+
+## Features
+
+- **Multi-Language Support**: Python, Rust, Dart/Flutter, JavaScript/TypeScript
+- **Vulnerability Scanning**: Integrated with OSV, GitHub Advisories, RustSec
+- **License Compliance**: SPDX-based license checking with configurable policies
+- **SBOM Generation**: CycloneDX 1.6 and SPDX 3.0 formats
+- **Monorepo Support**: Auto-detect workspaces across all ecosystems
+- **Beautiful CLI**: Rich output with tables, progress bars, and colors
+- **Plugin Architecture**: Extensible via Python entry points
+
+## Installation
+
+```bash
+# Using pip
+pip install depswiz
+
+# Using uv (recommended)
+uv add depswiz
+
+# From source
+git clone https://github.com/depswiz/depswiz.git
+cd depswiz
+pip install -e .
+```
+
+## Quick Start
+
+```bash
+# Check for outdated dependencies
+depswiz check
+
+# Scan for vulnerabilities
+depswiz audit
+
+# Check license compliance
+depswiz licenses
+
+# Generate SBOM
+depswiz sbom -o sbom.json
+
+# Update dependencies interactively
+depswiz update
+```
+
+## Commands
+
+### `depswiz check`
+
+Check dependencies for available updates.
+
+```bash
+depswiz check                      # Check current directory
+depswiz check --workspace          # Check all workspace members
+depswiz check -l python -l rust    # Check only Python and Rust
+depswiz check --format json        # Output as JSON
+depswiz check --fail-outdated      # Exit 1 if outdated packages found
+```
+
+### `depswiz audit`
+
+Scan dependencies for known vulnerabilities.
+
+```bash
+depswiz audit                      # Audit current directory
+depswiz audit --severity high      # Only show high+ severity
+depswiz audit --fail-on critical   # Fail on critical vulnerabilities
+depswiz audit --ignore CVE-2024-XXX  # Ignore specific vulnerability
+```
+
+### `depswiz licenses`
+
+Check license compliance.
+
+```bash
+depswiz licenses                   # List all licenses
+depswiz licenses --summary         # License distribution only
+depswiz licenses --deny GPL-3.0    # Fail on GPL-3.0 licensed packages
+```
+
+### `depswiz sbom`
+
+Generate Software Bill of Materials.
+
+```bash
+depswiz sbom -o sbom.json          # CycloneDX format (default)
+depswiz sbom --format spdx -o sbom.spdx.json
+depswiz sbom --include-transitive  # Include transitive dependencies
+```
+
+### `depswiz update`
+
+Update dependencies interactively.
+
+```bash
+depswiz update                     # Interactive update
+depswiz update --dry-run           # Preview changes
+depswiz update --strategy patch    # Only patch updates
+depswiz update -y                  # Auto-confirm
+```
+
+## Configuration
+
+Create a `depswiz.toml` in your project root:
+
+```toml
+[depswiz]
+default_format = "cli"
+
+[languages]
+enabled = ["python", "rust", "dart", "javascript"]
+
+[check]
+recursive = false
+workspace = true
+strategy = "all"
+warn_breaking = true
+
+[audit]
+severity_threshold = "low"
+fail_on = "high"
+sources = ["osv"]
+
+[licenses]
+policy_mode = "allow"
+allowed = ["MIT", "Apache-2.0", "BSD-3-Clause", "ISC"]
+denied = ["GPL-3.0", "AGPL-3.0"]
+warn_copyleft = true
+
+[sbom]
+format = "cyclonedx"
+include_transitive = true
+```
+
+Or add to your `pyproject.toml`:
+
+```toml
+[tool.depswiz]
+default_format = "cli"
+
+[tool.depswiz.audit]
+fail_on = "high"
+```
+
+## Supported Languages
+
+| Language | Manifest | Lockfile | Registry |
+|----------|----------|----------|----------|
+| Python | pyproject.toml, requirements.txt | uv.lock, poetry.lock | PyPI |
+| Rust | Cargo.toml | Cargo.lock | crates.io |
+| Dart/Flutter | pubspec.yaml | pubspec.lock | pub.dev |
+| JavaScript/TypeScript | package.json | package-lock.json, yarn.lock | npm |
+
+## Output Formats
+
+- **cli** (default): Rich terminal output with colors and tables
+- **json**: Machine-readable JSON
+- **markdown**: GitHub-compatible markdown
+- **html**: Self-contained HTML report
+- **cyclonedx**: CycloneDX 1.6 SBOM
+- **spdx**: SPDX 3.0 SBOM
+
+## Plugin Development
+
+Create a new language plugin by implementing `LanguagePlugin`:
+
+```python
+from depswiz.plugins.base import LanguagePlugin
+
+class MyPlugin(LanguagePlugin):
+    @property
+    def name(self) -> str:
+        return "mylang"
+
+    @property
+    def manifest_patterns(self) -> list[str]:
+        return ["myproject.toml"]
+
+    # ... implement other required methods
+```
+
+Register via `pyproject.toml`:
+
+```toml
+[project.entry-points."depswiz.languages"]
+mylang = "my_package:MyPlugin"
+```
+
+## CI/CD Integration
+
+### GitHub Actions
+
+```yaml
+- name: Security Audit
+  run: depswiz audit --fail-on high
+
+- name: License Check
+  run: depswiz licenses --fail-on-unknown
+
+- name: Generate SBOM
+  run: depswiz sbom -o sbom.json
+```
+
+### Exit Codes
+
+- `0`: Success
+- `1`: Vulnerabilities or violations found (when using `--fail-*` options)
+
+## Development
+
+```bash
+# Clone and install
+git clone https://github.com/depswiz/depswiz.git
+cd depswiz
+pip install -e ".[dev]"
+
+# Run tests
+pytest
+
+# Type checking
+mypy src/depswiz
+
+# Linting
+ruff check src/depswiz
+```
+
+## Contributing
+
+Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) for details.
+
+## License
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+## Acknowledgments
+
+- [OSV](https://osv.dev/) for vulnerability data
+- [CycloneDX](https://cyclonedx.org/) and [SPDX](https://spdx.dev/) for SBOM standards
+- [Rich](https://github.com/Textualize/rich) and [Typer](https://typer.tiangolo.com/) for beautiful CLI

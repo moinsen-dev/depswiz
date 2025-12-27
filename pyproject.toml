@@ -1,0 +1,149 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "depswiz"
+version = "1.0.0"
+description = "Multi-language dependency wizard - check, audit, and update dependencies across Python, Rust, Dart, and JavaScript ecosystems"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.13"
+authors = [
+    { name = "depswiz contributors" }
+]
+keywords = [
+    "dependencies",
+    "security",
+    "vulnerability",
+    "sbom",
+    "audit",
+    "python",
+    "rust",
+    "dart",
+    "javascript",
+    "typescript",
+    "monorepo",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Security",
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: Software Development :: Quality Assurance",
+    "Typing :: Typed",
+]
+
+dependencies = [
+    # CLI Framework
+    "typer>=0.15.0",
+    "rich>=13.9.0",
+
+    # HTTP Client (async)
+    "httpx>=0.27.0",
+
+    # Parsing
+    "pyyaml>=6.0.0",
+
+    # Version handling
+    "packaging>=24.0",
+    "semver>=3.0.0",
+
+    # SBOM generation
+    "cyclonedx-python-lib>=11.0.0",
+
+    # Async support
+    "anyio>=4.0.0",
+
+    # Caching
+    "diskcache>=5.6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=5.0.0",
+    "mypy>=1.13.0",
+    "ruff>=0.8.0",
+    "pre-commit>=4.0.0",
+]
+docs = [
+    "mkdocs>=1.6.0",
+    "mkdocs-material>=9.5.0",
+]
+
+[project.scripts]
+depswiz = "depswiz.cli:app"
+
+[project.entry-points."depswiz.languages"]
+python = "depswiz.plugins.python:PythonPlugin"
+rust = "depswiz.plugins.rust:RustPlugin"
+dart = "depswiz.plugins.dart:DartPlugin"
+javascript = "depswiz.plugins.javascript:JavaScriptPlugin"
+
+[project.urls]
+Homepage = "https://github.com/depswiz/depswiz"
+Documentation = "https://depswiz.dev"
+Repository = "https://github.com/depswiz/depswiz"
+Issues = "https://github.com/depswiz/depswiz/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/depswiz"]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # pyflakes
+    "I",      # isort
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "UP",     # pyupgrade
+    "ARG",    # flake8-unused-arguments
+    "SIM",    # flake8-simplify
+    "TCH",    # flake8-type-checking
+    "PTH",    # flake8-use-pathlib
+    "ERA",    # eradicate
+    "RUF",    # Ruff-specific rules
+]
+ignore = [
+    "E501",   # line too long (handled by formatter)
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["depswiz"]
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+warn_return_any = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = "-v --cov=depswiz --cov-report=term-missing"
+
+[tool.coverage.run]
+source = ["src/depswiz"]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+]
