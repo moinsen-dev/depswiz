@@ -7,6 +7,7 @@ from rich.console import Console
 
 from depswiz import __version__
 from depswiz.cli.commands import audit, check, licenses, plugins, sbom, suggest, tools, update
+from depswiz.core.logging import LogLevel, setup_logging
 
 # Create the main app
 app = typer.Typer(
@@ -38,9 +39,24 @@ def version() -> None:
     console.print(f"[bold]depswiz[/bold] version [green]{__version__}[/green]")
 
 
+def _version_callback(value: bool) -> None:
+    """Print version and exit."""
+    if value:
+        console.print(f"depswiz {__version__}")
+        raise typer.Exit()
+
+
 @app.callback()
 def main(
     ctx: typer.Context,
+    version: bool = typer.Option(
+        False,
+        "--version",
+        "-V",
+        help="Show version and exit",
+        callback=_version_callback,
+        is_eager=True,
+    ),
     config: Path | None = typer.Option(
         None,
         "--config",
@@ -78,6 +94,14 @@ def main(
     ctx.obj["verbose"] = verbose
     ctx.obj["quiet"] = quiet
     ctx.obj["no_color"] = no_color
+
+    # Configure logging based on verbosity flags
+    if quiet:
+        setup_logging(LogLevel.QUIET, rich_output=not no_color)
+    elif verbose:
+        setup_logging(LogLevel.VERBOSE, rich_output=not no_color)
+    else:
+        setup_logging(LogLevel.NORMAL, rich_output=not no_color)
 
 
 if __name__ == "__main__":

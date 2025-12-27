@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "depswiz"
-version = "0.2.0"
+version = "0.3.0"
 description = "Multi-language dependency wizard - check, audit, and update dependencies across Python, Rust, Dart, and JavaScript ecosystems"
 readme = "README.md"
 license = "MIT"

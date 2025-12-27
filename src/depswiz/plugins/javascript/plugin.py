@@ -6,8 +6,11 @@ from pathlib import Path
 
 import httpx
 
+from depswiz.core.logging import get_logger
 from depswiz.core.models import LicenseInfo, Package
 from depswiz.plugins.base import LanguagePlugin
+
+logger = get_logger("plugins.javascript")
 
 
 class JavaScriptPlugin(LanguagePlugin):
@@ -69,8 +72,12 @@ class JavaScriptPlugin(LanguagePlugin):
                 if pkg:
                     packages.append(pkg)
 
-        except Exception:
-            pass
+        except json.JSONDecodeError as e:
+            logger.warning("Failed to parse package.json at %s: %s", path, e)
+        except OSError as e:
+            logger.warning("Failed to read package.json at %s: %s", path, e)
+        except Exception as e:
+            logger.debug("Unexpected error parsing package.json at %s: %s", path, e)
 
         return packages
 
@@ -153,8 +160,12 @@ class JavaScriptPlugin(LanguagePlugin):
                 if pkg_name and version and "/" not in pkg_name[1:]:
                     packages.append(Package(name=pkg_name, current_version=version))
 
-        except Exception:
-            pass
+        except json.JSONDecodeError as e:
+            logger.warning("Failed to parse package-lock.json at %s: %s", path, e)
+        except OSError as e:
+            logger.warning("Failed to read package-lock.json at %s: %s", path, e)
+        except Exception as e:
+            logger.debug("Unexpected error parsing package-lock.json at %s: %s", path, e)
 
         return packages
 
@@ -186,8 +197,10 @@ class JavaScriptPlugin(LanguagePlugin):
                         )
                         current_name = None
 
-        except Exception:
-            pass
+        except OSError as e:
+            logger.warning("Failed to read yarn.lock at %s: %s", path, e)
+        except Exception as e:
+            logger.debug("Unexpected error parsing yarn.lock at %s: %s", path, e)
 
         return packages
 
@@ -213,8 +226,12 @@ class JavaScriptPlugin(LanguagePlugin):
                     version = match.group(2)
                     packages.append(Package(name=name, current_version=version))
 
-        except Exception:
-            pass
+        except yaml.YAMLError as e:
+            logger.warning("Failed to parse pnpm-lock.yaml at %s: %s", path, e)
+        except OSError as e:
+            logger.warning("Failed to read pnpm-lock.yaml at %s: %s", path, e)
+        except Exception as e:
+            logger.debug("Unexpected error parsing pnpm-lock.yaml at %s: %s", path, e)
 
         return packages
 
@@ -230,8 +247,12 @@ class JavaScriptPlugin(LanguagePlugin):
                 data = response.json()
                 return data.get("dist-tags", {}).get("latest")
 
-        except Exception:
-            pass
+        except httpx.HTTPStatusError as e:
+            logger.debug("HTTP error fetching npm info for %s: %s", package.name, e)
+        except httpx.RequestError as e:
+            logger.debug("Request error fetching npm info for %s: %s", package.name, e)
+        except Exception as e:
+            logger.debug("Unexpected error fetching npm info for %s: %s", package.name, e)
 
         return None
 
@@ -245,8 +266,12 @@ class JavaScriptPlugin(LanguagePlugin):
             if response.status_code == 200:
                 return response.json()
 
-        except Exception:
-            pass
+        except httpx.HTTPStatusError as e:
+            logger.debug("HTTP error fetching package info for %s: %s", package.name, e)
+        except httpx.RequestError as e:
+            logger.debug("Request error fetching package info for %s: %s", package.name, e)
+        except Exception as e:
+            logger.debug("Unexpected error fetching package info for %s: %s", package.name, e)
 
         return None
 
@@ -272,8 +297,8 @@ class JavaScriptPlugin(LanguagePlugin):
                         license_type = license_data.get("type", "")
                         return LicenseInfo.from_spdx(license_type)
 
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("Error fetching license for %s: %s", package.name, e)
 
         return None
 
@@ -344,7 +369,13 @@ class JavaScriptPlugin(LanguagePlugin):
                         if (member_path / "package.json").exists():
                             members.append(member_path)
 
-        except Exception:
-            pass
+        except json.JSONDecodeError as e:
+            logger.warning("Failed to parse package.json for workspaces at %s: %s", path, e)
+        except yaml.YAMLError as e:
+            logger.warning("Failed to parse pnpm-workspace.yaml at %s: %s", path, e)
+        except OSError as e:
+            logger.warning("Failed to read workspace config at %s: %s", path, e)
+        except Exception as e:
+            logger.debug("Unexpected error detecting workspaces at %s: %s", path, e)
 
         return list(set(members))  # Deduplicate

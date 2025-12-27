@@ -176,8 +176,8 @@ class CliFormatter(OutputFormatter):
             table.add_column("License", style="cyan")
             table.add_column("Count", style="green")
 
-            for license_id, count in sorted(summary.items(), key=lambda x: -x[1]):
-                table.add_row(license_id, str(count))
+            for lic_id, count in sorted(summary.items(), key=lambda x: -x[1]):
+                table.add_row(lic_id, str(count))
 
             self.console.print(table)
         else:
@@ -189,12 +189,12 @@ class CliFormatter(OutputFormatter):
             table.add_column("Category")
 
             for pkg in result.packages:
-                license_id = pkg.license_info.spdx_id if pkg.license_info else "UNKNOWN"
+                license_id = (pkg.license_info.spdx_id if pkg.license_info else None) or "UNKNOWN"
                 category = pkg.license_info.category.value if pkg.license_info else "unknown"
                 table.add_row(
                     pkg.name,
                     pkg.current_version or "?",
-                    license_id or "UNKNOWN",
+                    license_id,
                     category,
                 )
 

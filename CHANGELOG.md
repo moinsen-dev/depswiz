@@ -7,6 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2025-12-27
+
+### Added
+
+- **Expanded Test Coverage**
+  - Comprehensive CLI command tests for check, audit, and tools commands
+  - Unit tests for configuration system, caching, plugin registry, and version utilities
+  - 305 passing tests with 48% overall code coverage
+  - Key modules now have high coverage: version.py (100%), cache.py (100%), config.py (93%)
+
+- **GHSA Vulnerability Source**
+  - GitHub Security Advisories integration for vulnerability scanning
+  - GraphQL API support with optional GitHub token for higher rate limits
+
+- **RustSec Vulnerability Source**
+  - RustSec Advisory Database integration for Rust packages
+  - Local advisory database support
+
+- **Logging Infrastructure**
+  - Rich-formatted logging with configurable levels
+  - Logging module with Rich handler integration
+  - `--verbose` / `-v` global flag for increased output
+  - `--quiet` / `-q` global flag for minimal output
+  - `--version` / `-V` flag to display version
+
+- **Dogfooding Test Script**
+  - Self-testing script at `scripts/dogfood.py`
+  - Tests all CLI commands against the project itself
+  - Quick mode (`--quick`) skips slow operations
+
+### Fixed
+
+- **CLI Argument Ordering**
+  - Fixed Typer argument parsing with `invoke_without_command=True`
+  - All CLI options must now precede positional path arguments
+
+- **Vulnerability Constructor**
+  - Fixed missing `affected_versions` parameter in test fixtures
+
+- **Version Parsing**
+  - Corrected ToolVersion.parse() method usage in tests
+
+### Changed
+
+- Improved error handling across plugin implementations
+- Enhanced test fixtures for security vulnerability scanning
+
 ## [0.2.0] - 2024-12-27
 
 ### Added
@@ -75,6 +122,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Markdown
   - HTML
 
-[Unreleased]: https://github.com/moinsen-dev/depswiz/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/moinsen-dev/depswiz/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/moinsen-dev/depswiz/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/moinsen-dev/depswiz/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/moinsen-dev/depswiz/releases/tag/v0.1.0

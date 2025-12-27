@@ -3,6 +3,7 @@
 import json
 import uuid
 from datetime import UTC, datetime
+from typing import Any
 
 from depswiz import __version__
 from depswiz.core.models import Package
@@ -37,7 +38,7 @@ class SpdxGenerator:
         doc_spdxid = "SPDXRef-DOCUMENT"
         main_spdxid = f"SPDXRef-Package-{self._sanitize_id(component_name)}"
 
-        sbom = {
+        sbom: dict[str, Any] = {
             "spdxVersion": f"SPDX-{self.spec_version}",
             "dataLicense": "CC0-1.0",
             "SPDXID": doc_spdxid,
@@ -89,7 +90,7 @@ class SpdxGenerator:
 
         return json.dumps(sbom, indent=2)
 
-    def _package_to_spdx(self, pkg: Package) -> dict:
+    def _package_to_spdx(self, pkg: Package) -> dict[str, Any]:
         """Convert a Package to an SPDX package entry."""
         spdxid = f"SPDXRef-Package-{self._sanitize_id(pkg.name)}"
         purl = self._generate_purl(pkg)

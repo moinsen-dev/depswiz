@@ -63,7 +63,7 @@ class JsonFormatter(OutputFormatter):
 
     def format_license_result(self, result: LicenseResult, summary_only: bool = False) -> str:
         """Format a license result as JSON."""
-        data = {
+        data: dict[str, Any] = {
             "version": __version__,
             "timestamp": result.timestamp.isoformat(),
             "command": "licenses",

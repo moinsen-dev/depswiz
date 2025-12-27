@@ -99,3 +99,94 @@ class TestExtractVersionFromConstraint:
 
     def test_bare_version(self):
         assert extract_version_from_constraint("1.2.3") == "1.2.3"
+
+    def test_less_equal_constraint(self):
+        assert extract_version_from_constraint("<=1.2.3") == "1.2.3"
+
+    def test_not_equal_constraint(self):
+        assert extract_version_from_constraint("!=1.2.3") == "1.2.3"
+
+    def test_tilde_equal_constraint(self):
+        assert extract_version_from_constraint("~=1.2.3") == "1.2.3"
+
+    def test_greater_than_constraint(self):
+        assert extract_version_from_constraint(">1.2.3") == "1.2.3"
+
+    def test_less_than_constraint(self):
+        assert extract_version_from_constraint("<1.2.3") == "1.2.3"
+
+    def test_with_whitespace(self):
+        assert extract_version_from_constraint("  >=1.2.3  ") == "1.2.3"
+
+    def test_invalid_constraint(self):
+        assert extract_version_from_constraint("not-a-version") is None
+
+
+class TestDetermineUpdateTypeEdgeCases:
+    """Edge case tests for determine_update_type function."""
+
+    def test_invalid_current_version(self):
+        assert determine_update_type("invalid", "1.0.0") is None
+
+    def test_invalid_latest_version(self):
+        assert determine_update_type("1.0.0", "invalid") is None
+
+    def test_prerelease_to_release(self):
+        result = determine_update_type("1.0.0a1", "1.0.0")
+        assert result == UpdateType.PATCH
+
+
+class TestIsCompatibleUpdateEdgeCases:
+    """Edge case tests for is_compatible_update function."""
+
+    def test_no_constraint(self):
+        assert is_compatible_update("1.0.0", "2.0.0", None) is True
+
+    def test_invalid_current_version(self):
+        assert is_compatible_update("invalid", "1.0.0", "^1.0.0") is False
+
+    def test_invalid_latest_version(self):
+        assert is_compatible_update("1.0.0", "invalid", "^1.0.0") is False
+
+    def test_caret_constraint_zero_major_compatible(self):
+        # ^0.1.2 means >=0.1.2 <0.2.0
+        assert is_compatible_update("0.1.0", "0.1.5", "^0.1.0") is True
+
+    def test_caret_constraint_zero_major_incompatible(self):
+        # ^0.1.2 means >=0.1.2 <0.2.0
+        assert is_compatible_update("0.1.0", "0.2.0", "^0.1.0") is False
+
+    def test_caret_constraint_invalid_base(self):
+        assert is_compatible_update("1.0.0", "2.0.0", "^invalid") is True
+
+    def test_caret_constraint_latest_less_than_base(self):
+        assert is_compatible_update("1.0.0", "0.5.0", "^1.0.0") is False
+
+    def test_tilde_constraint_invalid_base(self):
+        assert is_compatible_update("1.0.0", "2.0.0", "~invalid") is True
+
+    def test_tilde_constraint_latest_less_than_base(self):
+        assert is_compatible_update("1.2.0", "1.1.0", "~1.2.0") is False
+
+    def test_tilde_with_equals_prefix(self):
+        assert is_compatible_update("1.2.0", "1.2.5", "~=1.2.0") is True
+
+    def test_greater_equal_with_comma(self):
+        assert is_compatible_update("1.0.0", "1.5.0", ">=1.0.0, <2.0.0") is True
+
+    def test_greater_equal_invalid_base(self):
+        assert is_compatible_update("1.0.0", "2.0.0", ">=invalid") is True
+
+    def test_greater_equal_incompatible(self):
+        assert is_compatible_update("1.0.0", "0.5.0", ">=1.0.0") is False
+
+    def test_unhandled_constraint(self):
+        # Other constraint types are considered compatible
+        assert is_compatible_update("1.0.0", "2.0.0", "==1.0.0") is True
+
+
+class TestNormalizeVersionEdgeCases:
+    """Edge case tests for normalize_version function."""
+
+    def test_invalid_version_returns_as_is(self):
+        assert normalize_version("not-a-version") == "not-a-version"

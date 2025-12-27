@@ -1,12 +1,21 @@
 """Vulnerability aggregation and checking."""
 
 import asyncio
+from typing import TYPE_CHECKING
 
 import httpx
 
 from depswiz.core.config import Config
+from depswiz.core.logging import get_logger
 from depswiz.core.models import Package, Vulnerability
+from depswiz.security.sources.ghsa import GhsaSource
 from depswiz.security.sources.osv import OsvSource
+from depswiz.security.sources.rustsec import RustSecSource
+
+if TYPE_CHECKING:
+    from depswiz.security.sources.base import VulnerabilitySource
+
+logger = get_logger("security.vulnerabilities")
 
 
 class VulnerabilityAggregator:
@@ -14,7 +23,7 @@ class VulnerabilityAggregator:
 
     def __init__(self, config: Config | None = None):
         self.config = config or Config()
-        self.sources = []
+        self.sources: list[VulnerabilitySource] = []
 
         # Initialize enabled sources
         enabled_sources = self.config.audit.sources if config else ["osv"]
@@ -22,11 +31,11 @@ class VulnerabilityAggregator:
         if "osv" in enabled_sources:
             self.sources.append(OsvSource())
 
-        # TODO: Add more sources
-        # if "ghsa" in enabled_sources:
-        #     self.sources.append(GhsaSource())
-        # if "rustsec" in enabled_sources:
-        #     self.sources.append(RustSecSource())
+        if "ghsa" in enabled_sources:
+            self.sources.append(GhsaSource())
+
+        if "rustsec" in enabled_sources:
+            self.sources.append(RustSecSource())
 
     async def check_packages(self, packages: list[Package]) -> list[tuple[Package, Vulnerability]]:
         """Check multiple packages for vulnerabilities.
@@ -77,9 +86,12 @@ class VulnerabilityAggregator:
             try:
                 vulns = await source.check_package(client, package)
                 all_vulns.extend(vulns)
-            except Exception:
-                # Log but continue with other sources
-                pass
+            except httpx.HTTPStatusError as e:
+                logger.warning("HTTP error from %s for %s: %s", source.name, package.name, e)
+            except httpx.RequestError as e:
+                logger.warning("Request error from %s for %s: %s", source.name, package.name, e)
+            except Exception as e:
+                logger.debug("Unexpected error from %s for %s: %s", source.name, package.name, e)
 
         return all_vulns
 

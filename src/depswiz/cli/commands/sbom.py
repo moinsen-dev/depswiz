@@ -123,6 +123,7 @@ def sbom(
         progress.update(task, description="Generating SBOM...")
 
         # Generate SBOM
+        generator: CycloneDxGenerator | SpdxGenerator
         if sbom_format == "cyclonedx":
             generator = CycloneDxGenerator(spec_version=spec_version)
         else:

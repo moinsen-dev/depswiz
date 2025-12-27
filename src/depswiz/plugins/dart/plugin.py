@@ -6,8 +6,11 @@ from pathlib import Path
 import httpx
 import yaml
 
+from depswiz.core.logging import get_logger
 from depswiz.core.models import LicenseInfo, Package
 from depswiz.plugins.base import LanguagePlugin
+
+logger = get_logger("plugins.dart")
 
 
 class DartPlugin(LanguagePlugin):
@@ -66,8 +69,12 @@ class DartPlugin(LanguagePlugin):
                 if pkg:
                     packages.append(pkg)
 
-        except Exception:
-            pass
+        except yaml.YAMLError as e:
+            logger.warning("Failed to parse pubspec.yaml at %s: %s", path, e)
+        except OSError as e:
+            logger.warning("Failed to read pubspec.yaml at %s: %s", path, e)
+        except Exception as e:
+            logger.debug("Unexpected error parsing pubspec.yaml at %s: %s", path, e)
 
         return packages
 
@@ -142,8 +149,12 @@ class DartPlugin(LanguagePlugin):
                 if name and version:
                     packages.append(Package(name=name, current_version=version))
 
-        except Exception:
-            pass
+        except yaml.YAMLError as e:
+            logger.warning("Failed to parse pubspec.lock at %s: %s", path, e)
+        except OSError as e:
+            logger.warning("Failed to read pubspec.lock at %s: %s", path, e)
+        except Exception as e:
+            logger.debug("Unexpected error parsing pubspec.lock at %s: %s", path, e)
 
         return packages
 
@@ -157,8 +168,12 @@ class DartPlugin(LanguagePlugin):
                 data = response.json()
                 return data.get("latest", {}).get("version")
 
-        except Exception:
-            pass
+        except httpx.HTTPStatusError as e:
+            logger.debug("HTTP error fetching pub.dev info for %s: %s", package.name, e)
+        except httpx.RequestError as e:
+            logger.debug("Request error fetching pub.dev info for %s: %s", package.name, e)
+        except Exception as e:
+            logger.debug("Unexpected error fetching pub.dev info for %s: %s", package.name, e)
 
         return None
 
@@ -171,8 +186,12 @@ class DartPlugin(LanguagePlugin):
             if response.status_code == 200:
                 return response.json()
 
-        except Exception:
-            pass
+        except httpx.HTTPStatusError as e:
+            logger.debug("HTTP error fetching package info for %s: %s", package.name, e)
+        except httpx.RequestError as e:
+            logger.debug("Request error fetching package info for %s: %s", package.name, e)
+        except Exception as e:
+            logger.debug("Unexpected error fetching package info for %s: %s", package.name, e)
 
         return None
 
@@ -203,8 +222,8 @@ class DartPlugin(LanguagePlugin):
                             license_id = tag.split(":")[-1]
                             return LicenseInfo.from_spdx(license_id.upper())
 
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("Error fetching license for %s: %s", package.name, e)
 
         return None
 
@@ -252,8 +271,12 @@ class DartPlugin(LanguagePlugin):
             if "flutter" in env:
                 return True
 
-        except Exception:
-            pass
+        except yaml.YAMLError as e:
+            logger.debug("Failed to parse pubspec.yaml for Flutter detection: %s", e)
+        except OSError as e:
+            logger.debug("Failed to read pubspec.yaml for Flutter detection: %s", e)
+        except Exception as e:
+            logger.debug("Unexpected error checking Flutter project: %s", e)
 
         return False
 
@@ -290,7 +313,11 @@ class DartPlugin(LanguagePlugin):
                     if (member_path / "pubspec.yaml").exists():
                         members.append(member_path)
 
-        except Exception:
-            pass
+        except yaml.YAMLError as e:
+            logger.warning("Failed to parse workspace config at %s: %s", path, e)
+        except OSError as e:
+            logger.warning("Failed to read workspace config at %s: %s", path, e)
+        except Exception as e:
+            logger.debug("Unexpected error detecting workspaces at %s: %s", path, e)
 
         return members

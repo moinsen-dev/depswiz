@@ -3,6 +3,7 @@
 import json
 import uuid
 from datetime import UTC, datetime
+from typing import Any
 
 from depswiz import __version__
 from depswiz.core.models import Package
@@ -33,7 +34,7 @@ class CycloneDxGenerator:
         serial_number = f"urn:uuid:{uuid.uuid4()}"
         timestamp = datetime.now(UTC).isoformat()
 
-        sbom = {
+        sbom: dict[str, Any] = {
             "$schema": f"http://cyclonedx.org/schema/bom-{self.spec_version}.schema.json",
             "bomFormat": "CycloneDX",
             "specVersion": self.spec_version,
@@ -79,12 +80,12 @@ class CycloneDxGenerator:
 
         return json.dumps(sbom, indent=2)
 
-    def _package_to_component(self, pkg: Package) -> dict:
+    def _package_to_component(self, pkg: Package) -> dict[str, Any]:
         """Convert a Package to a CycloneDX component."""
         purl = self._generate_purl(pkg)
         bom_ref = purl
 
-        component = {
+        component: dict[str, Any] = {
             "type": "library",
             "bom-ref": bom_ref,
             "name": pkg.name,

@@ -70,7 +70,12 @@ def get_all_plugins() -> list[LanguagePlugin]:
         List of plugin instances
     """
     plugins = discover_plugins()
-    return [get_plugin(name) for name in plugins if get_plugin(name) is not None]
+    result: list[LanguagePlugin] = []
+    for name in plugins:
+        plugin = get_plugin(name)
+        if plugin is not None:
+            result.append(plugin)
+    return result
 
 
 def get_plugins_for_path(path) -> list[LanguagePlugin]:

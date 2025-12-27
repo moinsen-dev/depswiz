@@ -4,8 +4,11 @@ from datetime import datetime
 
 import httpx
 
+from depswiz.core.logging import get_logger
 from depswiz.core.models import Package, Severity, Vulnerability
 from depswiz.security.sources.base import VulnerabilitySource
+
+logger = get_logger("security.osv")
 
 # Mapping from plugin names to OSV ecosystem names
 ECOSYSTEM_MAP = {
@@ -68,8 +71,14 @@ class OsvSource(VulnerabilitySource):
 
             return vulns
 
-        except Exception:
-            return []
+        except httpx.HTTPStatusError as e:
+            logger.debug("HTTP error querying OSV for %s: %s", package.name, e)
+        except httpx.RequestError as e:
+            logger.debug("Request error querying OSV for %s: %s", package.name, e)
+        except Exception as e:
+            logger.debug("Unexpected error querying OSV for %s: %s", package.name, e)
+
+        return []
 
     def _parse_vulnerability(self, data: dict) -> Vulnerability | None:
         """Parse OSV vulnerability data into our model."""
@@ -172,7 +181,8 @@ class OsvSource(VulnerabilitySource):
                 cwe_ids=cwe_ids,
             )
 
-        except Exception:
+        except Exception as e:
+            logger.debug("Error parsing vulnerability data: %s", e)
             return None
 
     def _parse_cvss_score(self, vector: str) -> float | None:

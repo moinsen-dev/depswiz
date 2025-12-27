@@ -171,7 +171,7 @@ class LanguagePlugin(ABC):
         Returns:
             List of manifest file paths
         """
-        found = []
+        found: list[Path] = []
         for pattern in self.manifest_patterns:
             if recursive:
                 found.extend(path.rglob(pattern))
@@ -188,7 +188,7 @@ class LanguagePlugin(ABC):
         Returns:
             List of lockfile paths
         """
-        found = []
+        found: list[Path] = []
         for pattern in self.lockfile_patterns:
             found.extend(path.glob(pattern))
         return sorted(set(found))

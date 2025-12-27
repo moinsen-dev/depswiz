@@ -6,8 +6,11 @@ from pathlib import Path
 
 import httpx
 
+from depswiz.core.logging import get_logger
 from depswiz.core.models import LicenseInfo, Package
 from depswiz.plugins.base import LanguagePlugin
+
+logger = get_logger("plugins.rust")
 
 
 class RustPlugin(LanguagePlugin):
@@ -70,8 +73,12 @@ class RustPlugin(LanguagePlugin):
                     if pkg:
                         packages.append(pkg)
 
-        except Exception:
-            pass
+        except tomllib.TOMLDecodeError as e:
+            logger.warning("Failed to parse Cargo.toml at %s: %s", path, e)
+        except OSError as e:
+            logger.warning("Failed to read Cargo.toml at %s: %s", path, e)
+        except Exception as e:
+            logger.debug("Unexpected error parsing Cargo.toml at %s: %s", path, e)
 
         return packages
 
@@ -126,8 +133,12 @@ class RustPlugin(LanguagePlugin):
                 if name and version:
                     packages.append(Package(name=name, current_version=version))
 
-        except Exception:
-            pass
+        except tomllib.TOMLDecodeError as e:
+            logger.warning("Failed to parse Cargo.lock at %s: %s", path, e)
+        except OSError as e:
+            logger.warning("Failed to read Cargo.lock at %s: %s", path, e)
+        except Exception as e:
+            logger.debug("Unexpected error parsing Cargo.lock at %s: %s", path, e)
 
         return packages
 
@@ -142,8 +153,12 @@ class RustPlugin(LanguagePlugin):
                 data = response.json()
                 return data.get("crate", {}).get("max_version")
 
-        except Exception:
-            pass
+        except httpx.HTTPStatusError as e:
+            logger.debug("HTTP error fetching crates.io info for %s: %s", package.name, e)
+        except httpx.RequestError as e:
+            logger.debug("Request error fetching crates.io info for %s: %s", package.name, e)
+        except Exception as e:
+            logger.debug("Unexpected error fetching crates.io info for %s: %s", package.name, e)
 
         return None
 
@@ -157,8 +172,12 @@ class RustPlugin(LanguagePlugin):
             if response.status_code == 200:
                 return response.json()
 
-        except Exception:
-            pass
+        except httpx.HTTPStatusError as e:
+            logger.debug("HTTP error fetching package info for %s: %s", package.name, e)
+        except httpx.RequestError as e:
+            logger.debug("Request error fetching package info for %s: %s", package.name, e)
+        except Exception as e:
+            logger.debug("Unexpected error fetching package info for %s: %s", package.name, e)
 
         return None
 
@@ -193,8 +212,8 @@ class RustPlugin(LanguagePlugin):
 
                         return LicenseInfo.from_spdx(license_str)
 
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("Error fetching license for %s: %s", package.name, e)
 
         return None
 
@@ -246,7 +265,11 @@ class RustPlugin(LanguagePlugin):
                     if (member_path / "Cargo.toml").exists():
                         members.append(member_path)
 
-        except Exception:
-            pass
+        except tomllib.TOMLDecodeError as e:
+            logger.warning("Failed to parse Cargo.toml for workspaces at %s: %s", path, e)
+        except OSError as e:
+            logger.warning("Failed to read workspace config at %s: %s", path, e)
+        except Exception as e:
+            logger.debug("Unexpected error detecting workspaces at %s: %s", path, e)
 
         return members

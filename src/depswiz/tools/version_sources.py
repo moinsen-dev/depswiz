@@ -2,8 +2,11 @@
 
 import httpx
 
+from depswiz.core.logging import get_logger
 from depswiz.tools.definitions import get_tool_definition
 from depswiz.tools.models import ToolVersion
+
+logger = get_logger("tools.version_sources")
 
 
 class VersionFetchError(Exception):
@@ -82,8 +85,14 @@ async def fetch_latest_from_github(
         version_str = extract_version_from_tag(tag_name, tool_name)
         return ToolVersion.parse(version_str) if version_str else None
 
-    except Exception:
-        return None
+    except httpx.HTTPStatusError as e:
+        logger.debug("HTTP error fetching GitHub releases for %s: %s", repo, e)
+    except httpx.RequestError as e:
+        logger.debug("Request error fetching GitHub releases for %s: %s", repo, e)
+    except Exception as e:
+        logger.debug("Unexpected error fetching GitHub releases for %s: %s", repo, e)
+
+    return None
 
 
 async def fetch_latest_from_github_tags(
@@ -136,8 +145,14 @@ async def fetch_latest_from_github_tags(
 
         return None
 
-    except Exception:
-        return None
+    except httpx.HTTPStatusError as e:
+        logger.debug("HTTP error fetching GitHub tags for %s: %s", repo, e)
+    except httpx.RequestError as e:
+        logger.debug("Request error fetching GitHub tags for %s: %s", repo, e)
+    except Exception as e:
+        logger.debug("Unexpected error fetching GitHub tags for %s: %s", repo, e)
+
+    return None
 
 
 async def fetch_latest_nodejs(client: httpx.AsyncClient) -> ToolVersion | None:
@@ -171,8 +186,14 @@ async def fetch_latest_nodejs(client: httpx.AsyncClient) -> ToolVersion | None:
 
         return None
 
-    except Exception:
-        return None
+    except httpx.HTTPStatusError as e:
+        logger.debug("HTTP error fetching Node.js version: %s", e)
+    except httpx.RequestError as e:
+        logger.debug("Request error fetching Node.js version: %s", e)
+    except Exception as e:
+        logger.debug("Unexpected error fetching Node.js version: %s", e)
+
+    return None
 
 
 async def fetch_latest_go(client: httpx.AsyncClient) -> ToolVersion | None:
@@ -202,8 +223,14 @@ async def fetch_latest_go(client: httpx.AsyncClient) -> ToolVersion | None:
 
         return None
 
-    except Exception:
-        return None
+    except httpx.HTTPStatusError as e:
+        logger.debug("HTTP error fetching Go version: %s", e)
+    except httpx.RequestError as e:
+        logger.debug("Request error fetching Go version: %s", e)
+    except Exception as e:
+        logger.debug("Unexpected error fetching Go version: %s", e)
+
+    return None
 
 
 async def fetch_latest_dart(client: httpx.AsyncClient) -> ToolVersion | None:
@@ -227,8 +254,14 @@ async def fetch_latest_dart(client: httpx.AsyncClient) -> ToolVersion | None:
         version_str = data.get("version", "")
         return ToolVersion.parse(version_str)
 
-    except Exception:
-        return None
+    except httpx.HTTPStatusError as e:
+        logger.debug("HTTP error fetching Dart version: %s", e)
+    except httpx.RequestError as e:
+        logger.debug("Request error fetching Dart version: %s", e)
+    except Exception as e:
+        logger.debug("Unexpected error fetching Dart version: %s", e)
+
+    return None
 
 
 async def fetch_latest_flutter(client: httpx.AsyncClient) -> ToolVersion | None:
@@ -264,8 +297,14 @@ async def fetch_latest_flutter(client: httpx.AsyncClient) -> ToolVersion | None:
 
         return None
 
-    except Exception:
-        return None
+    except httpx.HTTPStatusError as e:
+        logger.debug("HTTP error fetching Flutter version: %s", e)
+    except httpx.RequestError as e:
+        logger.debug("Request error fetching Flutter version: %s", e)
+    except Exception as e:
+        logger.debug("Unexpected error fetching Flutter version: %s", e)
+
+    return None
 
 
 async def fetch_latest_version(

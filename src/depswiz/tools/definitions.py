@@ -203,6 +203,103 @@ TOOL_DEFINITIONS: dict[str, ToolDefinition] = {
             "windows": "Update Docker Desktop from the app",
         },
     ),
+    # Java ecosystem
+    "java": ToolDefinition(
+        name="java",
+        display_name="Java",
+        version_command=["java", "--version"],
+        version_regex=r"openjdk\s+(\d+\.\d+\.\d+)|java\s+(\d+\.\d+\.\d+)",
+        github_repo="adoptium/temurin-build",
+        project_indicators=["pom.xml", "build.gradle", "build.gradle.kts"],
+        update_instructions={
+            "macos": "brew upgrade openjdk  # or: sdk upgrade java",
+            "linux": "sudo apt update && sudo apt upgrade openjdk-21-jdk",
+            "windows": "winget upgrade EclipseAdoptium.Temurin.21.JDK",
+        },
+        related_tools=["maven", "gradle"],
+    ),
+    "maven": ToolDefinition(
+        name="maven",
+        display_name="Maven",
+        version_command=["mvn", "--version"],
+        version_regex=r"Apache Maven\s+(\d+\.\d+\.\d+)",
+        github_repo="apache/maven",
+        project_indicators=["pom.xml"],
+        update_instructions={
+            "macos": "brew upgrade maven",
+            "linux": "sudo apt update && sudo apt upgrade maven",
+            "windows": "choco upgrade maven",
+        },
+    ),
+    "gradle": ToolDefinition(
+        name="gradle",
+        display_name="Gradle",
+        version_command=["gradle", "--version"],
+        version_regex=r"Gradle\s+(\d+\.\d+(?:\.\d+)?)",
+        github_repo="gradle/gradle",
+        project_indicators=["build.gradle", "build.gradle.kts", "settings.gradle"],
+        update_instructions={
+            "macos": "brew upgrade gradle  # or: ./gradlew wrapper --gradle-version=latest",
+            "linux": "sdk upgrade gradle",
+            "windows": "choco upgrade gradle",
+        },
+    ),
+    # Ruby ecosystem
+    "ruby": ToolDefinition(
+        name="ruby",
+        display_name="Ruby",
+        version_command=["ruby", "--version"],
+        version_regex=r"ruby\s+(\d+\.\d+\.\d+)",
+        github_repo="ruby/ruby",
+        project_indicators=["Gemfile", "*.gemspec"],
+        update_instructions={
+            "macos": "brew upgrade ruby  # or: rbenv install <version>",
+            "linux": "rbenv install <version>  # or: rvm install <version>",
+            "windows": "choco upgrade ruby",
+        },
+        related_tools=["bundler"],
+    ),
+    "bundler": ToolDefinition(
+        name="bundler",
+        display_name="Bundler",
+        version_command=["bundle", "--version"],
+        version_regex=r"Bundler version\s+(\d+\.\d+\.\d+)",
+        github_repo="rubygems/rubygems",
+        project_indicators=["Gemfile", "Gemfile.lock"],
+        update_instructions={
+            "macos": "gem update bundler",
+            "linux": "gem update bundler",
+            "windows": "gem update bundler",
+        },
+    ),
+    # PHP ecosystem
+    "php": ToolDefinition(
+        name="php",
+        display_name="PHP",
+        version_command=["php", "--version"],
+        version_regex=r"PHP\s+(\d+\.\d+\.\d+)",
+        github_repo="php/php-src",
+        project_indicators=["composer.json", "composer.lock"],
+        update_instructions={
+            "macos": "brew upgrade php",
+            "linux": "sudo apt update && sudo apt upgrade php",
+            "windows": "choco upgrade php",
+        },
+        related_tools=["composer"],
+    ),
+    "composer": ToolDefinition(
+        name="composer",
+        display_name="Composer",
+        version_command=["composer", "--version"],
+        version_regex=r"Composer version\s+(\d+\.\d+\.\d+)",
+        github_repo="composer/composer",
+        project_indicators=["composer.json", "composer.lock"],
+        update_instructions={
+            "macos": "brew upgrade composer  # or: composer self-update",
+            "linux": "composer self-update",
+            "windows": "choco upgrade composer",
+        },
+    ),
 }
 
 

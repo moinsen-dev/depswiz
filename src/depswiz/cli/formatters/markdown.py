@@ -171,8 +171,8 @@ class MarkdownFormatter(OutputFormatter):
             "|---------|-------|",
         ]
 
-        for license_id, count in sorted(result.license_summary.items(), key=lambda x: -x[1]):
-            lines.append(f"| {license_id} | {count} |")
+        for lic_id, count in sorted(result.license_summary.items(), key=lambda x: -x[1]):
+            lines.append(f"| {lic_id} | {count} |")
 
         lines.append("")
 
@@ -210,7 +210,7 @@ class MarkdownFormatter(OutputFormatter):
                 ]
             )
             for pkg in result.packages:
-                license_id = pkg.license_info.spdx_id if pkg.license_info else "UNKNOWN"
+                license_id = (pkg.license_info.spdx_id if pkg.license_info else None) or "UNKNOWN"
                 category = pkg.license_info.category.value if pkg.license_info else "unknown"
                 lines.append(
                     f"| {pkg.name} | {pkg.current_version or '?'} | {license_id} | {category} |"

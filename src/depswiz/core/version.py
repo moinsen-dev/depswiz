@@ -55,9 +55,13 @@ def is_compatible_update(current: str, latest: str, constraint: str | None = Non
         base = parse_version(constraint[1:])
         if base is None:
             return True
-        # Major version must match (unless major is 0)
+        # Must be >= base version
+        if latest_ver < base:
+            return False
+        # For 0.x versions: ^0.1.2 means >=0.1.2 <0.2.0 (minor must match)
         if base.major == 0:
             return latest_ver.major == 0 and latest_ver.minor == base.minor
+        # For 1.x+ versions: ^1.2.3 means >=1.2.3 <2.0.0 (major must match)
         return latest_ver.major == base.major
 
     # Handle ~ (tilde) constraints: ~1.2.3 means >=1.2.3 <1.3.0
@@ -65,6 +69,9 @@ def is_compatible_update(current: str, latest: str, constraint: str | None = Non
         base = parse_version(constraint[1:].lstrip("="))
         if base is None:
             return True
+        # Must be >= base version
+        if latest_ver < base:
+            return False
         return latest_ver.major == base.major and latest_ver.minor == base.minor
 
     # Handle >= constraints

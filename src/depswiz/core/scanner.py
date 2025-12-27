@@ -49,8 +49,12 @@ async def scan_dependencies(
             progress_callback(msg)
 
     # Get applicable plugins
+    plugins: list[LanguagePlugin] = []
     if languages:
-        plugins = [get_plugin(lang) for lang in languages if get_plugin(lang)]
+        for lang in languages:
+            plugin = get_plugin(lang)
+            if plugin is not None:
+                plugins.append(plugin)
     else:
         plugins = get_plugins_for_path(path)
 
@@ -84,22 +88,23 @@ async def scan_dependencies(
 
                 # Fetch latest versions concurrently
                 semaphore = asyncio.Semaphore(config.network.max_concurrent_requests)
+                current_plugin = plugin  # Capture for closure
 
                 async def fetch_latest(
                     pkg: Package,
-                    plugin: LanguagePlugin = plugin,
-                    semaphore: asyncio.Semaphore = semaphore,
+                    _plugin: LanguagePlugin = current_plugin,
+                    _semaphore: asyncio.Semaphore = semaphore,
                 ) -> Package:
-                    async with semaphore:
+                    async with _semaphore:
                         # Check cache first
-                        cached = cache.get_package_info(plugin.name, pkg.name)
+                        cached = cache.get_package_info(_plugin.name, pkg.name)
                         if cached and "latest_version" in cached:
                             return pkg.with_latest_version(cached["latest_version"])
 
-                        latest = await plugin.fetch_latest_version(client, pkg)
+                        latest = await _plugin.fetch_latest_version(client, pkg)
                         if latest:
                             cache.set_package_info(
-                                plugin.name, pkg.name, {"latest_version": latest}
+                                _plugin.name, pkg.name, {"latest_version": latest}
                             )
                             return pkg.with_latest_version(latest)
                         return pkg

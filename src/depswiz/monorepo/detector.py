@@ -1,9 +1,16 @@
 """Monorepo/workspace detection."""
 
+import json
+import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 
+import yaml
+
+from depswiz.core.logging import get_logger
 from depswiz.plugins import get_all_plugins
+
+logger = get_logger("monorepo.detector")
 
 
 @dataclass
@@ -59,35 +66,44 @@ class WorkspaceDetector:
     def _get_cargo_name(self, path: Path) -> str:
         """Get package name from Cargo.toml."""
         try:
-            import tomllib
-
             with open(path / "Cargo.toml", "rb") as f:
                 data = tomllib.load(f)
             return data.get("package", {}).get("name", path.name)
-        except Exception:
-            return path.name
+        except tomllib.TOMLDecodeError as e:
+            logger.debug("Failed to parse Cargo.toml at %s: %s", path, e)
+        except OSError as e:
+            logger.debug("Failed to read Cargo.toml at %s: %s", path, e)
+        except Exception as e:
+            logger.debug("Unexpected error reading Cargo.toml at %s: %s", path, e)
+        return path.name
 
     def _get_npm_name(self, path: Path) -> str:
         """Get package name from package.json."""
         try:
-            import json
-
             with open(path / "package.json") as f:
                 data = json.load(f)
             return data.get("name", path.name)
-        except Exception:
-            return path.name
+        except json.JSONDecodeError as e:
+            logger.debug("Failed to parse package.json at %s: %s", path, e)
+        except OSError as e:
+            logger.debug("Failed to read package.json at %s: %s", path, e)
+        except Exception as e:
+            logger.debug("Unexpected error reading package.json at %s: %s", path, e)
+        return path.name
 
     def _get_pub_name(self, path: Path) -> str:
         """Get package name from pubspec.yaml."""
         try:
-            import yaml
-
             with open(path / "pubspec.yaml") as f:
                 data = yaml.safe_load(f)
             return data.get("name", path.name)
-        except Exception:
-            return path.name
+        except yaml.YAMLError as e:
+            logger.debug("Failed to parse pubspec.yaml at %s: %s", path, e)
+        except OSError as e:
+            logger.debug("Failed to read pubspec.yaml at %s: %s", path, e)
+        except Exception as e:
+            logger.debug("Unexpected error reading pubspec.yaml at %s: %s", path, e)
+        return path.name
 
     def is_workspace_root(self, path: Path) -> bool:
         """Check if the given path is a workspace root.

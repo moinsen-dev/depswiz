@@ -6,6 +6,7 @@
 [![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![CI](https://github.com/moinsen-dev/depswiz/actions/workflows/ci.yml/badge.svg)](https://github.com/moinsen-dev/depswiz/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/badge/coverage-48%25-yellow)](https://github.com/moinsen-dev/depswiz)
 [![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://moinsen-dev.github.io/depswiz/)
 
 ## Features
@@ -261,6 +262,10 @@ pip install -e ".[dev]"
 
 # Run tests
 pytest
+
+# Run dogfooding tests (depswiz checks itself)
+python scripts/dogfood.py
+python scripts/dogfood.py --quick  # Skip slow operations
 
 # Type checking
 mypy src/depswiz

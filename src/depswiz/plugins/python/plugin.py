@@ -6,8 +6,11 @@ from pathlib import Path
 
 import httpx
 
+from depswiz.core.logging import get_logger
 from depswiz.core.models import LicenseInfo, Package
 from depswiz.plugins.base import LanguagePlugin
+
+logger = get_logger("plugins.python")
 
 
 class PythonPlugin(LanguagePlugin):
@@ -98,8 +101,12 @@ class PythonPlugin(LanguagePlugin):
                         if pkg:
                             packages.append(pkg)
 
-        except Exception:
-            pass
+        except tomllib.TOMLDecodeError as e:
+            logger.warning("Failed to parse pyproject.toml at %s: %s", path, e)
+        except OSError as e:
+            logger.warning("Failed to read pyproject.toml at %s: %s", path, e)
+        except Exception as e:
+            logger.debug("Unexpected error parsing pyproject.toml at %s: %s", path, e)
 
         return packages
 
@@ -188,8 +195,10 @@ class PythonPlugin(LanguagePlugin):
                 if pkg:
                     packages.append(pkg)
 
-        except Exception:
-            pass
+        except OSError as e:
+            logger.warning("Failed to read requirements file at %s: %s", path, e)
+        except Exception as e:
+            logger.debug("Unexpected error parsing requirements at %s: %s", path, e)
 
         return packages
 
@@ -219,8 +228,10 @@ class PythonPlugin(LanguagePlugin):
                         if pkg:
                             packages.append(pkg)
 
-        except Exception:
-            pass
+        except OSError as e:
+            logger.warning("Failed to read setup.py at %s: %s", path, e)
+        except Exception as e:
+            logger.debug("Unexpected error parsing setup.py at %s: %s", path, e)
 
         return packages
 
@@ -245,8 +256,12 @@ class PythonPlugin(LanguagePlugin):
                 if name and version:
                     packages.append(Package(name=name, current_version=version))
 
-        except Exception:
-            pass
+        except tomllib.TOMLDecodeError as e:
+            logger.warning("Failed to parse uv.lock at %s: %s", path, e)
+        except OSError as e:
+            logger.warning("Failed to read uv.lock at %s: %s", path, e)
+        except Exception as e:
+            logger.debug("Unexpected error parsing uv.lock at %s: %s", path, e)
 
         return packages
 
@@ -263,8 +278,12 @@ class PythonPlugin(LanguagePlugin):
                 if name and version:
                     packages.append(Package(name=name, current_version=version))
 
-        except Exception:
-            pass
+        except tomllib.TOMLDecodeError as e:
+            logger.warning("Failed to parse poetry.lock at %s: %s", path, e)
+        except OSError as e:
+            logger.warning("Failed to read poetry.lock at %s: %s", path, e)
+        except Exception as e:
+            logger.debug("Unexpected error parsing poetry.lock at %s: %s", path, e)
 
         return packages
 
@@ -278,8 +297,12 @@ class PythonPlugin(LanguagePlugin):
                 data = response.json()
                 return data.get("info", {}).get("version")
 
-        except Exception:
-            pass
+        except httpx.HTTPStatusError as e:
+            logger.debug("HTTP error fetching PyPI info for %s: %s", package.name, e)
+        except httpx.RequestError as e:
+            logger.debug("Request error fetching PyPI info for %s: %s", package.name, e)
+        except Exception as e:
+            logger.debug("Unexpected error fetching PyPI info for %s: %s", package.name, e)
 
         return None
 
@@ -292,8 +315,12 @@ class PythonPlugin(LanguagePlugin):
             if response.status_code == 200:
                 return response.json()
 
-        except Exception:
-            pass
+        except httpx.HTTPStatusError as e:
+            logger.debug("HTTP error fetching package info for %s: %s", package.name, e)
+        except httpx.RequestError as e:
+            logger.debug("Request error fetching package info for %s: %s", package.name, e)
+        except Exception as e:
+            logger.debug("Unexpected error fetching package info for %s: %s", package.name, e)
 
         return None
 
@@ -317,8 +344,8 @@ class PythonPlugin(LanguagePlugin):
                 if license_str:
                     return LicenseInfo(name=license_str, spdx_id=self._guess_spdx_id(license_str))
 
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("Error fetching license for %s: %s", package.name, e)
 
         return None
 

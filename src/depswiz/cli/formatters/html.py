@@ -311,10 +311,10 @@ class HtmlFormatter(OutputFormatter):
             <tbody>
         """
 
-        for license_id, count in sorted(result.license_summary.items(), key=lambda x: -x[1]):
+        for lic_id, count in sorted(result.license_summary.items(), key=lambda x: -x[1]):
             content += f"""
                 <tr>
-                    <td>{escape(license_id)}</td>
+                    <td>{escape(lic_id)}</td>
                     <td>{count}</td>
                 </tr>
             """
@@ -349,13 +349,13 @@ class HtmlFormatter(OutputFormatter):
             """
 
             for pkg in result.packages:
-                license_id = pkg.license_info.spdx_id if pkg.license_info else "UNKNOWN"
+                license_id = (pkg.license_info.spdx_id if pkg.license_info else None) or "UNKNOWN"
                 category = pkg.license_info.category.value if pkg.license_info else "unknown"
                 content += f"""
                     <tr>
                         <td>{escape(pkg.name)}</td>
                         <td>{escape(pkg.current_version or "?")}</td>
-                        <td>{escape(license_id or "UNKNOWN")}</td>
+                        <td>{escape(license_id)}</td>
                         <td>{escape(category)}</td>
                     </tr>
                 """
