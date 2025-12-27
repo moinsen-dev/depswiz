@@ -1,15 +1,13 @@
 """Tests for version utilities."""
 
-import pytest
-
+from depswiz.core.models import UpdateType
 from depswiz.core.version import (
-    parse_version,
     determine_update_type,
+    extract_version_from_constraint,
     is_compatible_update,
     normalize_version,
-    extract_version_from_constraint,
+    parse_version,
 )
-from depswiz.core.models import UpdateType
 
 
 class TestParseVersion:

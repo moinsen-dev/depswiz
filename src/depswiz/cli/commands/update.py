@@ -3,7 +3,6 @@
 import asyncio
 import subprocess
 from pathlib import Path
-from typing import Optional
 
 import typer
 from rich.console import Console
@@ -24,13 +23,13 @@ console = Console()
 def update(
     ctx: typer.Context,
     path: Path = typer.Argument(
-        Path("."),
+        Path(),
         help="Project path to update",
         exists=True,
         file_okay=False,
         dir_okay=True,
     ),
-    language: Optional[list[str]] = typer.Option(
+    language: list[str] | None = typer.Option(
         None,
         "--language",
         "-l",
@@ -58,7 +57,7 @@ def update(
         "--no-lockfile",
         help="Don't update lockfiles",
     ),
-    package: Optional[list[str]] = typer.Option(
+    package: list[str] | None = typer.Option(
         None,
         "--package",
         "-p",

@@ -2,8 +2,11 @@
 
 **Dependency Wizard** - A multi-language dependency management CLI tool for modern development workflows.
 
+[![PyPI version](https://img.shields.io/pypi/v/depswiz.svg)](https://pypi.org/project/depswiz/)
 [![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+[![CI](https://github.com/moinsen-dev/depswiz/actions/workflows/ci.yml/badge.svg)](https://github.com/moinsen-dev/depswiz/actions/workflows/ci.yml)
+[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://moinsen-dev.github.io/depswiz/)
 
 ## Features
 
@@ -12,6 +15,8 @@
 - **License Compliance**: SPDX-based license checking with configurable policies
 - **SBOM Generation**: CycloneDX 1.6 and SPDX 3.0 formats
 - **Monorepo Support**: Auto-detect workspaces across all ecosystems
+- **Development Tools Checking**: Check if Node, Python, Rust, Dart, Flutter, uv, etc. are up to date
+- **AI-Powered Suggestions**: Claude Code integration for intelligent upgrade strategies
 - **Beautiful CLI**: Rich output with tables, progress bars, and colors
 - **Plugin Architecture**: Extensible via Python entry points
 
@@ -25,7 +30,7 @@ pip install depswiz
 uv add depswiz
 
 # From source
-git clone https://github.com/depswiz/depswiz.git
+git clone https://github.com/moinsen-dev/depswiz.git
 cd depswiz
 pip install -e .
 ```
@@ -47,6 +52,12 @@ depswiz sbom -o sbom.json
 
 # Update dependencies interactively
 depswiz update
+
+# Check development tools for updates
+depswiz tools
+
+# Get AI-powered upgrade suggestions (requires Claude Code)
+depswiz suggest
 ```
 
 ## Commands
@@ -104,6 +115,34 @@ depswiz update --dry-run           # Preview changes
 depswiz update --strategy patch    # Only patch updates
 depswiz update -y                  # Auto-confirm
 ```
+
+### `depswiz tools`
+
+Check development tools for updates.
+
+```bash
+depswiz tools                      # Auto-detect and check relevant tools
+depswiz tools --all                # Check all 15 supported tools
+depswiz tools -t node -t python    # Check specific tools
+depswiz tools --updates-only       # Only show tools with updates
+depswiz tools --format json        # JSON output for CI
+depswiz tools --upgrade            # Use Claude Code to upgrade tools
+```
+
+**Supported Tools:** Node.js, npm, pnpm, Yarn, Bun, Deno, Python, uv, pip, Rust, Cargo, Dart, Flutter, Go, Docker
+
+### `depswiz suggest`
+
+Get AI-powered upgrade suggestions using Claude Code.
+
+```bash
+depswiz suggest                    # Full upgrade strategy
+depswiz suggest --focus security   # Focus on security vulnerabilities
+depswiz suggest --focus quick      # Quick health summary
+depswiz suggest --focus toolchain  # Analyze development tools
+```
+
+**Note:** Requires [Claude Code CLI](https://claude.ai/code) to be installed.
 
 ## Configuration
 
@@ -216,7 +255,7 @@ mylang = "my_package:MyPlugin"
 
 ```bash
 # Clone and install
-git clone https://github.com/depswiz/depswiz.git
+git clone https://github.com/moinsen-dev/depswiz.git
 cd depswiz
 pip install -e ".[dev]"
 

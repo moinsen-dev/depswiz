@@ -1,15 +1,12 @@
 """Tests for core models."""
 
-import pytest
-
 from depswiz.core.models import (
-    Package,
-    Vulnerability,
-    LicenseInfo,
-    UpdateType,
-    Severity,
-    LicenseCategory,
     CheckResult,
+    LicenseCategory,
+    LicenseInfo,
+    Package,
+    Severity,
+    UpdateType,
 )
 
 
@@ -101,8 +98,18 @@ class TestCheckResult:
     def test_with_packages(self):
         packages = [
             Package(name="pkg1", current_version="1.0.0", latest_version="1.0.0"),
-            Package(name="pkg2", current_version="1.0.0", latest_version="2.0.0", update_type=UpdateType.MAJOR),
-            Package(name="pkg3", current_version="1.0.0", latest_version="1.1.0", update_type=UpdateType.MINOR),
+            Package(
+                name="pkg2",
+                current_version="1.0.0",
+                latest_version="2.0.0",
+                update_type=UpdateType.MAJOR,
+            ),
+            Package(
+                name="pkg3",
+                current_version="1.0.0",
+                latest_version="1.1.0",
+                update_type=UpdateType.MINOR,
+            ),
         ]
         result = CheckResult(packages=packages)
 
@@ -112,10 +119,30 @@ class TestCheckResult:
 
     def test_update_breakdown(self):
         packages = [
-            Package(name="pkg1", current_version="1.0.0", latest_version="2.0.0", update_type=UpdateType.MAJOR),
-            Package(name="pkg2", current_version="1.0.0", latest_version="1.1.0", update_type=UpdateType.MINOR),
-            Package(name="pkg3", current_version="1.0.0", latest_version="1.0.1", update_type=UpdateType.PATCH),
-            Package(name="pkg4", current_version="1.0.0", latest_version="1.0.2", update_type=UpdateType.PATCH),
+            Package(
+                name="pkg1",
+                current_version="1.0.0",
+                latest_version="2.0.0",
+                update_type=UpdateType.MAJOR,
+            ),
+            Package(
+                name="pkg2",
+                current_version="1.0.0",
+                latest_version="1.1.0",
+                update_type=UpdateType.MINOR,
+            ),
+            Package(
+                name="pkg3",
+                current_version="1.0.0",
+                latest_version="1.0.1",
+                update_type=UpdateType.PATCH,
+            ),
+            Package(
+                name="pkg4",
+                current_version="1.0.0",
+                latest_version="1.0.2",
+                update_type=UpdateType.PATCH,
+            ),
         ]
         result = CheckResult(packages=packages)
         breakdown = result.update_breakdown

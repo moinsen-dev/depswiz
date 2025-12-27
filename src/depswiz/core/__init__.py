@@ -1,26 +1,26 @@
 """Core module for depswiz."""
 
-from depswiz.core.models import (
-    Package,
-    Vulnerability,
-    LicenseInfo,
-    UpdateType,
-    Severity,
-    CheckResult,
-    AuditResult,
-    LicenseResult,
-)
 from depswiz.core.config import Config, load_config
+from depswiz.core.models import (
+    AuditResult,
+    CheckResult,
+    LicenseInfo,
+    LicenseResult,
+    Package,
+    Severity,
+    UpdateType,
+    Vulnerability,
+)
 
 __all__ = [
-    "Package",
-    "Vulnerability",
-    "LicenseInfo",
-    "UpdateType",
-    "Severity",
-    "CheckResult",
     "AuditResult",
-    "LicenseResult",
+    "CheckResult",
     "Config",
+    "LicenseInfo",
+    "LicenseResult",
+    "Package",
+    "Severity",
+    "UpdateType",
+    "Vulnerability",
     "load_config",
 ]

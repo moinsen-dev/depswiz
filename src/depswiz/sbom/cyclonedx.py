@@ -2,8 +2,7 @@
 
 import json
 import uuid
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
 
 from depswiz import __version__
 from depswiz.core.models import Package
@@ -32,7 +31,7 @@ class CycloneDxGenerator:
             JSON string of the CycloneDX SBOM
         """
         serial_number = f"urn:uuid:{uuid.uuid4()}"
-        timestamp = datetime.now(timezone.utc).isoformat()
+        timestamp = datetime.now(UTC).isoformat()
 
         sbom = {
             "$schema": f"http://cyclonedx.org/schema/bom-{self.spec_version}.schema.json",
@@ -71,10 +70,12 @@ class CycloneDxGenerator:
             main_deps.append(component["bom-ref"])
 
         # Add dependency relationship
-        sbom["dependencies"].append({
-            "ref": f"pkg:{component_name}@{component_version}",
-            "dependsOn": main_deps,
-        })
+        sbom["dependencies"].append(
+            {
+                "ref": f"pkg:{component_name}@{component_version}",
+                "dependsOn": main_deps,
+            }
+        )
 
         return json.dumps(sbom, indent=2)
 
@@ -93,33 +94,39 @@ class CycloneDxGenerator:
 
         # Add license if available
         if pkg.license_info and pkg.license_info.spdx_id:
-            component["licenses"] = [
-                {"license": {"id": pkg.license_info.spdx_id}}
-            ]
+            component["licenses"] = [{"license": {"id": pkg.license_info.spdx_id}}]
 
         # Add external references
         external_refs = []
 
         if pkg.language == "python":
-            external_refs.append({
-                "type": "website",
-                "url": f"https://pypi.org/project/{pkg.name}/",
-            })
+            external_refs.append(
+                {
+                    "type": "website",
+                    "url": f"https://pypi.org/project/{pkg.name}/",
+                }
+            )
         elif pkg.language == "rust":
-            external_refs.append({
-                "type": "website",
-                "url": f"https://crates.io/crates/{pkg.name}",
-            })
+            external_refs.append(
+                {
+                    "type": "website",
+                    "url": f"https://crates.io/crates/{pkg.name}",
+                }
+            )
         elif pkg.language == "javascript":
-            external_refs.append({
-                "type": "website",
-                "url": f"https://www.npmjs.com/package/{pkg.name}",
-            })
+            external_refs.append(
+                {
+                    "type": "website",
+                    "url": f"https://www.npmjs.com/package/{pkg.name}",
+                }
+            )
         elif pkg.language == "dart":
-            external_refs.append({
-                "type": "website",
-                "url": f"https://pub.dev/packages/{pkg.name}",
-            })
+            external_refs.append(
+                {
+                    "type": "website",
+                    "url": f"https://pub.dev/packages/{pkg.name}",
+                }
+            )
 
         if external_refs:
             component["externalReferences"] = external_refs
@@ -128,16 +135,20 @@ class CycloneDxGenerator:
         properties = []
 
         if pkg.is_dev:
-            properties.append({
-                "name": "depswiz:scope",
-                "value": "development",
-            })
+            properties.append(
+                {
+                    "name": "depswiz:scope",
+                    "value": "development",
+                }
+            )
 
         if pkg.language:
-            properties.append({
-                "name": "depswiz:language",
-                "value": pkg.language,
-            })
+            properties.append(
+                {
+                    "name": "depswiz:language",
+                    "value": pkg.language,
+                }
+            )
 
         if properties:
             component["properties"] = properties

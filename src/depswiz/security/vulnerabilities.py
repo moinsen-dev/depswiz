@@ -1,7 +1,6 @@
 """Vulnerability aggregation and checking."""
 
 import asyncio
-from typing import Optional
 
 import httpx
 
@@ -13,7 +12,7 @@ from depswiz.security.sources.osv import OsvSource
 class VulnerabilityAggregator:
     """Aggregates vulnerability data from multiple sources."""
 
-    def __init__(self, config: Optional[Config] = None):
+    def __init__(self, config: Config | None = None):
         self.config = config or Config()
         self.sources = []
 
@@ -29,9 +28,7 @@ class VulnerabilityAggregator:
         # if "rustsec" in enabled_sources:
         #     self.sources.append(RustSecSource())
 
-    async def check_packages(
-        self, packages: list[Package]
-    ) -> list[tuple[Package, Vulnerability]]:
+    async def check_packages(self, packages: list[Package]) -> list[tuple[Package, Vulnerability]]:
         """Check multiple packages for vulnerabilities.
 
         Args:

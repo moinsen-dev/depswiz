@@ -2,12 +2,11 @@
 
 import re
 from pathlib import Path
-from typing import Optional
 
 import httpx
 import yaml
 
-from depswiz.core.models import Package, LicenseInfo
+from depswiz.core.models import LicenseInfo, Package
 from depswiz.plugins.base import LanguagePlugin
 
 
@@ -72,9 +71,7 @@ class DartPlugin(LanguagePlugin):
 
         return packages
 
-    def _parse_dependency(
-        self, name: str, spec, is_dev: bool = False
-    ) -> Optional[Package]:
+    def _parse_dependency(self, name: str, spec, is_dev: bool = False) -> Package | None:
         """Parse a pub dependency specification."""
         # Skip SDK dependencies (flutter, flutter_test)
         if name in ("flutter", "flutter_test", "flutter_localizations", "flutter_driver"):
@@ -109,7 +106,7 @@ class DartPlugin(LanguagePlugin):
             is_dev=is_dev,
         )
 
-    def _extract_version(self, constraint: str) -> Optional[str]:
+    def _extract_version(self, constraint: str) -> str | None:
         """Extract version number from a pub constraint."""
         if not constraint:
             return None
@@ -118,7 +115,7 @@ class DartPlugin(LanguagePlugin):
         if constraint == "any":
             return None
 
-        match = re.search(r'[>=<^]*\s*(\d+\.\d+\.\d+(?:[+-][a-zA-Z0-9.]+)?)', constraint)
+        match = re.search(r"[>=<^]*\s*(\d+\.\d+\.\d+(?:[+-][a-zA-Z0-9.]+)?)", constraint)
         if match:
             return match.group(1)
 
@@ -150,9 +147,7 @@ class DartPlugin(LanguagePlugin):
 
         return packages
 
-    async def fetch_latest_version(
-        self, client: httpx.AsyncClient, package: Package
-    ) -> Optional[str]:
+    async def fetch_latest_version(self, client: httpx.AsyncClient, package: Package) -> str | None:
         """Query pub.dev for the latest version."""
         try:
             url = f"https://pub.dev/api/packages/{package.name}"
@@ -167,9 +162,7 @@ class DartPlugin(LanguagePlugin):
 
         return None
 
-    async def fetch_package_info(
-        self, client: httpx.AsyncClient, package: Package
-    ) -> Optional[dict]:
+    async def fetch_package_info(self, client: httpx.AsyncClient, package: Package) -> dict | None:
         """Fetch full package information from pub.dev."""
         try:
             url = f"https://pub.dev/api/packages/{package.name}"
@@ -185,13 +178,13 @@ class DartPlugin(LanguagePlugin):
 
     async def fetch_license(
         self, client: httpx.AsyncClient, package: Package
-    ) -> Optional[LicenseInfo]:
+    ) -> LicenseInfo | None:
         """Fetch license information from pub.dev."""
         try:
             info = await self.fetch_package_info(client, package)
             if info:
                 latest = info.get("latest", {})
-                pubspec = latest.get("pubspec", {})
+                latest.get("pubspec", {})
 
                 # Check for license in pubspec
                 # Note: pub.dev doesn't have a direct license field in API

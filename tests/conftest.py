@@ -1,7 +1,8 @@
 """Pytest configuration and fixtures."""
 
-import pytest
 from pathlib import Path
+
+import pytest
 
 
 @pytest.fixture
@@ -13,7 +14,7 @@ def fixtures_path() -> Path:
 @pytest.fixture
 def sample_pyproject(tmp_path: Path) -> Path:
     """Create a sample pyproject.toml file."""
-    content = '''
+    content = """
 [project]
 name = "test-project"
 version = "0.1.0"
@@ -28,7 +29,7 @@ dev = [
     "pytest>=8.0.0",
     "ruff>=0.1.0",
 ]
-'''
+"""
     pyproject = tmp_path / "pyproject.toml"
     pyproject.write_text(content)
     return pyproject
@@ -37,7 +38,7 @@ dev = [
 @pytest.fixture
 def sample_cargo_toml(tmp_path: Path) -> Path:
     """Create a sample Cargo.toml file."""
-    content = '''
+    content = """
 [package]
 name = "test-project"
 version = "0.1.0"
@@ -48,7 +49,7 @@ tokio = { version = "1.0", features = ["full"] }
 
 [dev-dependencies]
 criterion = "0.5"
-'''
+"""
     cargo = tmp_path / "Cargo.toml"
     cargo.write_text(content)
     return cargo
@@ -57,7 +58,7 @@ criterion = "0.5"
 @pytest.fixture
 def sample_package_json(tmp_path: Path) -> Path:
     """Create a sample package.json file."""
-    content = '''
+    content = """
 {
   "name": "test-project",
   "version": "0.1.0",
@@ -70,7 +71,7 @@ def sample_package_json(tmp_path: Path) -> Path:
     "jest": "^29.0.0"
   }
 }
-'''
+"""
     package = tmp_path / "package.json"
     package.write_text(content)
     return package
@@ -79,7 +80,7 @@ def sample_package_json(tmp_path: Path) -> Path:
 @pytest.fixture
 def sample_pubspec(tmp_path: Path) -> Path:
     """Create a sample pubspec.yaml file."""
-    content = '''
+    content = """
 name: test_project
 version: 0.1.0
 
@@ -92,7 +93,7 @@ dependencies:
 
 dev_dependencies:
   test: ^1.24.0
-'''
+"""
     pubspec = tmp_path / "pubspec.yaml"
     pubspec.write_text(content)
     return pubspec

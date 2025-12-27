@@ -2,7 +2,6 @@
 
 import asyncio
 from pathlib import Path
-from typing import Optional
 
 import typer
 from rich.console import Console
@@ -20,13 +19,13 @@ console = Console()
 def sbom(
     ctx: typer.Context,
     path: Path = typer.Argument(
-        Path("."),
+        Path(),
         help="Project path to scan",
         exists=True,
         file_okay=False,
         dir_okay=True,
     ),
-    language: Optional[list[str]] = typer.Option(
+    language: list[str] | None = typer.Option(
         None,
         "--language",
         "-l",
@@ -50,7 +49,7 @@ def sbom(
         "-f",
         help="SBOM format: cyclonedx, spdx",
     ),
-    spec_version: Optional[str] = typer.Option(
+    spec_version: str | None = typer.Option(
         None,
         "--spec-version",
         help="Spec version (cyclonedx: 1.6, spdx: 3.0)",
@@ -65,18 +64,18 @@ def sbom(
         "--include-transitive/--no-transitive",
         help="Include transitive dependencies from lockfiles",
     ),
-    output: Optional[Path] = typer.Option(
+    output: Path | None = typer.Option(
         None,
         "--output",
         "-o",
         help="Output file (defaults to stdout)",
     ),
-    component_name: Optional[str] = typer.Option(
+    component_name: str | None = typer.Option(
         None,
         "--name",
         help="Component name for SBOM",
     ),
-    component_version: Optional[str] = typer.Option(
+    component_version: str | None = typer.Option(
         None,
         "--version",
         help="Component version for SBOM",
@@ -93,7 +92,7 @@ def sbom(
     if not include_transitive:
         config.sbom.include_transitive = False
 
-    verbose = ctx.obj.get("verbose", False) if ctx.obj else False
+    ctx.obj.get("verbose", False) if ctx.obj else False
     quiet = ctx.obj.get("quiet", False) if ctx.obj else False
 
     # Determine spec version

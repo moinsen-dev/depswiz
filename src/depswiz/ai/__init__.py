@@ -1,17 +1,17 @@
 """AI integration module for depswiz."""
 
 from depswiz.ai.claude_client import (
-    is_available,
-    find_claude_binary,
-    run_claude,
     ClaudeError,
+    find_claude_binary,
+    is_available,
+    run_claude,
 )
 from depswiz.ai.prompts import get_prompt
 
 __all__ = [
-    "is_available",
-    "find_claude_binary",
-    "run_claude",
     "ClaudeError",
+    "find_claude_binary",
     "get_prompt",
+    "is_available",
+    "run_claude",
 ]

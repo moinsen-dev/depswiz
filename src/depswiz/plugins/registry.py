@@ -1,13 +1,11 @@
 """Plugin registry and discovery."""
 
 from importlib.metadata import entry_points
-from typing import Optional
 
 from depswiz.plugins.base import LanguagePlugin
 
-
 # Cache for discovered plugins
-_plugins: Optional[dict[str, type[LanguagePlugin]]] = None
+_plugins: dict[str, type[LanguagePlugin]] | None = None
 _plugin_instances: dict[str, LanguagePlugin] = {}
 
 
@@ -38,12 +36,13 @@ def discover_plugins() -> dict[str, type[LanguagePlugin]]:
         except Exception as e:
             # Log warning but continue loading other plugins
             import warnings
+
             warnings.warn(f"Failed to load plugin '{ep.name}': {e}")
 
     return _plugins
 
 
-def get_plugin(name: str) -> Optional[LanguagePlugin]:
+def get_plugin(name: str) -> LanguagePlugin | None:
     """Get a plugin instance by name.
 
     Args:
@@ -84,6 +83,7 @@ def get_plugins_for_path(path) -> list[LanguagePlugin]:
         List of plugins that detect manifest files at the path
     """
     from pathlib import Path
+
     path = Path(path)
 
     applicable = []
@@ -103,15 +103,17 @@ def list_plugins() -> list[dict]:
     plugins = discover_plugins()
     result = []
 
-    for name, plugin_class in plugins.items():
+    for name, _plugin_class in plugins.items():
         instance = get_plugin(name)
         if instance:
-            result.append({
-                "name": instance.name,
-                "display_name": instance.display_name,
-                "manifest_patterns": instance.manifest_patterns,
-                "lockfile_patterns": instance.lockfile_patterns,
-                "supports_workspaces": instance.supports_workspaces(),
-            })
+            result.append(
+                {
+                    "name": instance.name,
+                    "display_name": instance.display_name,
+                    "manifest_patterns": instance.manifest_patterns,
+                    "lockfile_patterns": instance.lockfile_patterns,
+                    "supports_workspaces": instance.supports_workspaces(),
+                }
+            )
 
     return result

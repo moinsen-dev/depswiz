@@ -3,11 +3,10 @@
 import json
 import re
 from pathlib import Path
-from typing import Optional
 
 import httpx
 
-from depswiz.core.models import Package, LicenseInfo
+from depswiz.core.models import LicenseInfo, Package
 from depswiz.plugins.base import LanguagePlugin
 
 
@@ -75,12 +74,13 @@ class JavaScriptPlugin(LanguagePlugin):
 
         return packages
 
-    def _parse_dependency(
-        self, name: str, version: str, is_dev: bool = False
-    ) -> Optional[Package]:
+    def _parse_dependency(self, name: str, version: str, is_dev: bool = False) -> Package | None:
         """Parse an npm dependency specification."""
         # Skip file:, link:, git:, github: dependencies
-        if any(version.startswith(p) for p in ("file:", "link:", "git:", "git+", "github:", "http:", "https:")):
+        if any(
+            version.startswith(p)
+            for p in ("file:", "link:", "git:", "git+", "github:", "http:", "https:")
+        ):
             return None
 
         # Handle npm: protocol
@@ -97,7 +97,7 @@ class JavaScriptPlugin(LanguagePlugin):
             is_dev=is_dev,
         )
 
-    def _extract_version(self, constraint: str) -> Optional[str]:
+    def _extract_version(self, constraint: str) -> str | None:
         """Extract version number from an npm constraint."""
         if not constraint:
             return None
@@ -111,7 +111,7 @@ class JavaScriptPlugin(LanguagePlugin):
             return None
 
         # Handle ^ (caret), ~ (tilde), >= , <=, >, <, =, x ranges
-        match = re.search(r'[>=<^~]*\s*v?(\d+(?:\.\d+)*(?:-[a-zA-Z0-9.]+)?)', constraint)
+        match = re.search(r"[>=<^~]*\s*v?(\d+(?:\.\d+)*(?:-[a-zA-Z0-9.]+)?)", constraint)
         if match:
             return match.group(1)
 
@@ -181,10 +181,9 @@ class JavaScriptPlugin(LanguagePlugin):
                 elif line.strip().startswith("version "):
                     version_match = re.search(r'version\s+"?([^"]+)"?', line)
                     if version_match and current_name:
-                        packages.append(Package(
-                            name=current_name,
-                            current_version=version_match.group(1)
-                        ))
+                        packages.append(
+                            Package(name=current_name, current_version=version_match.group(1))
+                        )
                         current_name = None
 
         except Exception:
@@ -198,6 +197,7 @@ class JavaScriptPlugin(LanguagePlugin):
 
         try:
             import yaml
+
             with open(path) as f:
                 data = yaml.safe_load(f)
 
@@ -205,9 +205,9 @@ class JavaScriptPlugin(LanguagePlugin):
                 return []
 
             # v6+ format
-            for pkg_path, pkg_data in (data.get("packages") or {}).items():
+            for pkg_path, _pkg_data in (data.get("packages") or {}).items():
                 # Parse package path like "/lodash@4.17.21"
-                match = re.match(r'^/(@?[^@]+)@([^(@]+)', pkg_path)
+                match = re.match(r"^/(@?[^@]+)@([^(@]+)", pkg_path)
                 if match:
                     name = match.group(1)
                     version = match.group(2)
@@ -218,9 +218,7 @@ class JavaScriptPlugin(LanguagePlugin):
 
         return packages
 
-    async def fetch_latest_version(
-        self, client: httpx.AsyncClient, package: Package
-    ) -> Optional[str]:
+    async def fetch_latest_version(self, client: httpx.AsyncClient, package: Package) -> str | None:
         """Query npm registry for the latest version."""
         try:
             # Handle scoped packages
@@ -237,9 +235,7 @@ class JavaScriptPlugin(LanguagePlugin):
 
         return None
 
-    async def fetch_package_info(
-        self, client: httpx.AsyncClient, package: Package
-    ) -> Optional[dict]:
+    async def fetch_package_info(self, client: httpx.AsyncClient, package: Package) -> dict | None:
         """Fetch full package information from npm registry."""
         try:
             encoded_name = package.name.replace("/", "%2F")
@@ -256,7 +252,7 @@ class JavaScriptPlugin(LanguagePlugin):
 
     async def fetch_license(
         self, client: httpx.AsyncClient, package: Package
-    ) -> Optional[LicenseInfo]:
+    ) -> LicenseInfo | None:
         """Fetch license information from npm registry."""
         try:
             info = await self.fetch_package_info(client, package)
@@ -339,6 +335,7 @@ class JavaScriptPlugin(LanguagePlugin):
             pnpm_workspace = path / "pnpm-workspace.yaml"
             if pnpm_workspace.exists():
                 import yaml
+
                 with open(pnpm_workspace) as f:
                     pnpm_data = yaml.safe_load(f)
 

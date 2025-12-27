@@ -1,0 +1,127 @@
+site_name: depswiz
+site_description: Multi-language dependency wizard - check, audit, and update dependencies
+site_author: moinsen-dev
+site_url: https://moinsen-dev.github.io/depswiz/
+
+repo_name: moinsen-dev/depswiz
+repo_url: https://github.com/moinsen-dev/depswiz
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: deep purple
+      accent: amber
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: deep purple
+      accent: amber
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+  icon:
+    repo: fontawesome/brands/github
+  logo: assets/logo.svg
+  favicon: assets/logo.svg
+
+plugins:
+  - search
+  - minify:
+      minify_html: true
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink:
+      repo_url_shorthand: true
+      user: moinsen-dev
+      repo: depswiz
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/moinsen-dev/depswiz
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/depswiz/
+  generator: false
+
+extra_css:
+  - stylesheets/extra.css
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Installation: getting-started/installation.md
+      - Quick Start: getting-started/quickstart.md
+  - Commands:
+      - Overview: commands/index.md
+      - check: commands/check.md
+      - audit: commands/audit.md
+      - licenses: commands/licenses.md
+      - sbom: commands/sbom.md
+      - update: commands/update.md
+      - tools: commands/tools.md
+      - suggest: commands/suggest.md
+  - Configuration: configuration.md
+  - Languages:
+      - Overview: languages/index.md
+      - Python: languages/python.md
+      - Rust: languages/rust.md
+      - Dart/Flutter: languages/dart.md
+      - JavaScript/TypeScript: languages/javascript.md
+  - Plugins:
+      - Overview: plugins/index.md
+      - Developing Plugins: plugins/developing.md
+      - Plugin API: plugins/api.md
+  - CI/CD Integration: ci-cd.md
+  - Contributing: contributing.md
+  - Changelog: changelog.md

@@ -3,7 +3,6 @@
 import shutil
 import subprocess
 from pathlib import Path
-from typing import Optional
 
 
 class ClaudeError(Exception):
@@ -12,7 +11,7 @@ class ClaudeError(Exception):
     pass
 
 
-def find_claude_binary() -> Optional[Path]:
+def find_claude_binary() -> Path | None:
     """Find Claude Code CLI binary in PATH.
 
     Returns:
@@ -45,7 +44,7 @@ def is_available() -> bool:
     return find_claude_binary() is not None
 
 
-def run_claude(prompt: str, timeout: int = 300, cwd: Optional[Path] = None) -> str:
+def run_claude(prompt: str, timeout: int = 300, cwd: Path | None = None) -> str:
     """Execute Claude Code CLI and return response.
 
     Args:
@@ -90,7 +89,7 @@ def run_claude(prompt: str, timeout: int = 300, cwd: Optional[Path] = None) -> s
 
     except subprocess.TimeoutExpired:
         raise
-    except FileNotFoundError:
-        raise ClaudeError(f"Could not execute Claude binary at {binary}")
+    except FileNotFoundError as err:
+        raise ClaudeError(f"Could not execute Claude binary at {binary}") from err
     except Exception as e:
-        raise ClaudeError(f"Error running Claude: {e}")
+        raise ClaudeError(f"Error running Claude: {e}") from e

@@ -1,12 +1,11 @@
 """JSON output formatter for depswiz."""
 
 import json
-from datetime import datetime
 from typing import Any
 
 from depswiz import __version__
-from depswiz.core.models import CheckResult, AuditResult, LicenseResult, Package, Vulnerability
 from depswiz.cli.formatters.base import OutputFormatter
+from depswiz.core.models import AuditResult, CheckResult, LicenseResult, Package, Vulnerability
 
 
 class JsonFormatter(OutputFormatter):
@@ -72,12 +71,10 @@ class JsonFormatter(OutputFormatter):
             "path": str(result.path) if result.path else None,
             "summary": result.license_summary,
             "violations": [
-                {"package": pkg.name, "reason": reason}
-                for pkg, reason in result.violations
+                {"package": pkg.name, "reason": reason} for pkg, reason in result.violations
             ],
             "warnings": [
-                {"package": pkg.name, "reason": reason}
-                for pkg, reason in result.warnings
+                {"package": pkg.name, "reason": reason} for pkg, reason in result.warnings
             ],
         }
 
@@ -91,7 +88,9 @@ class JsonFormatter(OutputFormatter):
                         "name": pkg.license_info.name if pkg.license_info else None,
                         "category": pkg.license_info.category.value if pkg.license_info else None,
                         "is_copyleft": pkg.license_info.is_copyleft if pkg.license_info else None,
-                    } if pkg.license_info else None,
+                    }
+                    if pkg.license_info
+                    else None,
                 }
                 for pkg in result.packages
             ]

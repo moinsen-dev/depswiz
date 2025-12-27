@@ -2,15 +2,14 @@
 
 import asyncio
 from pathlib import Path
-from typing import Optional
 
 import typer
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
+from depswiz.cli.formatters import CliFormatter, HtmlFormatter, JsonFormatter, MarkdownFormatter
 from depswiz.core.config import load_config
-from depswiz.core.scanner import scan_dependencies, check_licenses
-from depswiz.cli.formatters import CliFormatter, JsonFormatter, MarkdownFormatter, HtmlFormatter
+from depswiz.core.scanner import check_licenses, scan_dependencies
 
 app = typer.Typer(invoke_without_command=True)
 console = Console()
@@ -31,13 +30,13 @@ def get_formatter(format_type: str):
 def licenses(
     ctx: typer.Context,
     path: Path = typer.Argument(
-        Path("."),
+        Path(),
         help="Project path to check",
         exists=True,
         file_okay=False,
         dir_okay=True,
     ),
-    language: Optional[list[str]] = typer.Option(
+    language: list[str] | None = typer.Option(
         None,
         "--language",
         "-l",
@@ -49,18 +48,18 @@ def licenses(
         "-r",
         help="Scan subdirectories",
     ),
-    policy: Optional[Path] = typer.Option(
+    policy: Path | None = typer.Option(
         None,
         "--policy",
         "-p",
         help="License policy file (TOML)",
     ),
-    allow: Optional[list[str]] = typer.Option(
+    allow: list[str] | None = typer.Option(
         None,
         "--allow",
         help="Allow specific license (can be repeated)",
     ),
-    deny: Optional[list[str]] = typer.Option(
+    deny: list[str] | None = typer.Option(
         None,
         "--deny",
         help="Deny specific license (can be repeated)",
@@ -81,7 +80,7 @@ def licenses(
         "-f",
         help="Output format: cli, json, markdown, html",
     ),
-    output: Optional[Path] = typer.Option(
+    output: Path | None = typer.Option(
         None,
         "--output",
         "-o",
@@ -101,7 +100,7 @@ def licenses(
     if fail_on_unknown:
         config.licenses.fail_on_unknown = True
 
-    verbose = ctx.obj.get("verbose", False) if ctx.obj else False
+    ctx.obj.get("verbose", False) if ctx.obj else False
     quiet = ctx.obj.get("quiet", False) if ctx.obj else False
 
     # Run the scan and license check

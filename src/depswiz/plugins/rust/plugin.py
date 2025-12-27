@@ -3,11 +3,10 @@
 import re
 import tomllib
 from pathlib import Path
-from typing import Optional
 
 import httpx
 
-from depswiz.core.models import Package, LicenseInfo
+from depswiz.core.models import LicenseInfo, Package
 from depswiz.plugins.base import LanguagePlugin
 
 
@@ -65,7 +64,7 @@ class RustPlugin(LanguagePlugin):
                     packages.append(pkg)
 
             # Target-specific dependencies
-            for target, target_deps in data.get("target", {}).items():
+            for _target, target_deps in data.get("target", {}).items():
                 for name, spec in target_deps.get("dependencies", {}).items():
                     pkg = self._parse_dependency(name, spec, is_dev=False)
                     if pkg:
@@ -78,7 +77,7 @@ class RustPlugin(LanguagePlugin):
 
     def _parse_dependency(
         self, name: str, spec: str | dict, is_dev: bool = False
-    ) -> Optional[Package]:
+    ) -> Package | None:
         """Parse a Cargo dependency specification."""
         version = None
         constraint = None
@@ -105,10 +104,10 @@ class RustPlugin(LanguagePlugin):
             is_dev=is_dev,
         )
 
-    def _extract_version(self, constraint: str) -> Optional[str]:
+    def _extract_version(self, constraint: str) -> str | None:
         """Extract version number from a Cargo constraint."""
         # Handle ^ (caret), ~ (tilde), = (exact), >, <, >= , <=
-        match = re.search(r'[>=<^~]*\s*(\d+(?:\.\d+)*)', constraint)
+        match = re.search(r"[>=<^~]*\s*(\d+(?:\.\d+)*)", constraint)
         if match:
             return match.group(1)
         return None
@@ -132,9 +131,7 @@ class RustPlugin(LanguagePlugin):
 
         return packages
 
-    async def fetch_latest_version(
-        self, client: httpx.AsyncClient, package: Package
-    ) -> Optional[str]:
+    async def fetch_latest_version(self, client: httpx.AsyncClient, package: Package) -> str | None:
         """Query crates.io for the latest version."""
         try:
             url = f"https://crates.io/api/v1/crates/{package.name}"
@@ -150,9 +147,7 @@ class RustPlugin(LanguagePlugin):
 
         return None
 
-    async def fetch_package_info(
-        self, client: httpx.AsyncClient, package: Package
-    ) -> Optional[dict]:
+    async def fetch_package_info(self, client: httpx.AsyncClient, package: Package) -> dict | None:
         """Fetch full package information from crates.io."""
         try:
             url = f"https://crates.io/api/v1/crates/{package.name}"
@@ -169,7 +164,7 @@ class RustPlugin(LanguagePlugin):
 
     async def fetch_license(
         self, client: httpx.AsyncClient, package: Package
-    ) -> Optional[LicenseInfo]:
+    ) -> LicenseInfo | None:
         """Fetch license information from crates.io."""
         try:
             info = await self.fetch_package_info(client, package)
@@ -179,8 +174,12 @@ class RustPlugin(LanguagePlugin):
                 if versions:
                     # Find the latest version
                     latest = next(
-                        (v for v in versions if v.get("num") == info.get("crate", {}).get("max_version")),
-                        versions[0]
+                        (
+                            v
+                            for v in versions
+                            if v.get("num") == info.get("crate", {}).get("max_version")
+                        ),
+                        versions[0],
                     )
                     license_str = latest.get("license", "")
 

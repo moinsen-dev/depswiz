@@ -2,16 +2,15 @@
 
 import asyncio
 from pathlib import Path
-from typing import Optional
 
 import typer
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
+from depswiz.cli.formatters import CliFormatter, HtmlFormatter, JsonFormatter, MarkdownFormatter
 from depswiz.core.config import load_config
 from depswiz.core.models import Severity
-from depswiz.core.scanner import scan_dependencies, audit_packages
-from depswiz.cli.formatters import CliFormatter, JsonFormatter, MarkdownFormatter, HtmlFormatter
+from depswiz.core.scanner import audit_packages, scan_dependencies
 
 app = typer.Typer(invoke_without_command=True)
 console = Console()
@@ -32,21 +31,23 @@ def parse_severity(value: str) -> Severity:
     """Parse a severity string into a Severity enum."""
     try:
         return Severity[value.upper()]
-    except KeyError:
-        raise typer.BadParameter(f"Invalid severity: {value}. Must be one of: low, medium, high, critical")
+    except KeyError as err:
+        raise typer.BadParameter(
+            f"Invalid severity: {value}. Must be one of: low, medium, high, critical"
+        ) from err
 
 
 @app.callback(invoke_without_command=True)
 def audit(
     ctx: typer.Context,
     path: Path = typer.Argument(
-        Path("."),
+        Path(),
         help="Project path to audit",
         exists=True,
         file_okay=False,
         dir_okay=True,
     ),
-    language: Optional[list[str]] = typer.Option(
+    language: list[str] | None = typer.Option(
         None,
         "--language",
         "-l",
@@ -70,12 +71,12 @@ def audit(
         "-s",
         help="Minimum severity to report: low, medium, high, critical",
     ),
-    ignore: Optional[list[str]] = typer.Option(
+    ignore: list[str] | None = typer.Option(
         None,
         "--ignore",
         help="Ignore specific vulnerability ID (can be repeated)",
     ),
-    ignore_file: Optional[Path] = typer.Option(
+    ignore_file: Path | None = typer.Option(
         None,
         "--ignore-file",
         help="File with vulnerability IDs to ignore",
@@ -96,7 +97,7 @@ def audit(
         "-f",
         help="Output format: cli, json, markdown, html",
     ),
-    output: Optional[Path] = typer.Option(
+    output: Path | None = typer.Option(
         None,
         "--output",
         "-o",
@@ -122,7 +123,7 @@ def audit(
             if line.strip() and not line.startswith("#")
         )
 
-    verbose = ctx.obj.get("verbose", False) if ctx.obj else False
+    ctx.obj.get("verbose", False) if ctx.obj else False
     quiet = ctx.obj.get("quiet", False) if ctx.obj else False
 
     # Run the scan and audit
@@ -160,7 +161,8 @@ def audit(
 
     # Filter by severity and ignored IDs
     filtered_vulns = [
-        (pkg, vuln) for pkg, vuln in audit_result.vulnerabilities
+        (pkg, vuln)
+        for pkg, vuln in audit_result.vulnerabilities
         if vuln.severity >= min_severity and vuln.id not in ignored_ids
     ]
     audit_result.vulnerabilities = filtered_vulns
@@ -181,8 +183,7 @@ def audit(
 
     # Check if we should fail
     failing_vulns = [
-        (pkg, vuln) for pkg, vuln in audit_result.vulnerabilities
-        if vuln.severity >= fail_severity
+        (pkg, vuln) for pkg, vuln in audit_result.vulnerabilities if vuln.severity >= fail_severity
     ]
 
     if failing_vulns:

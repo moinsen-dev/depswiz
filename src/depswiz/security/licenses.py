@@ -1,7 +1,7 @@
 """License compliance checking."""
 
 from depswiz.core.config import LicensesConfig
-from depswiz.core.models import Package, LicenseCategory
+from depswiz.core.models import LicenseCategory, Package
 
 
 class LicenseChecker:

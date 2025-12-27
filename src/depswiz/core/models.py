@@ -67,13 +67,13 @@ class Package:
     """Represents a dependency package."""
 
     name: str
-    current_version: Optional[str] = None
-    constraint: Optional[str] = None
-    latest_version: Optional[str] = None
-    update_type: Optional[UpdateType] = None
-    source_file: Optional[Path] = None
-    extras: Optional[list[str]] = None
-    language: Optional[str] = None
+    current_version: str | None = None
+    constraint: str | None = None
+    latest_version: str | None = None
+    update_type: UpdateType | None = None
+    source_file: Path | None = None
+    extras: list[str] | None = None
+    language: str | None = None
     is_dev: bool = False
     license_info: Optional["LicenseInfo"] = None
     vulnerabilities: list["Vulnerability"] = field(default_factory=list)
@@ -130,12 +130,12 @@ class Vulnerability:
     severity: Severity
     affected_versions: str
     source: str
-    cvss_score: Optional[float] = None
-    cvss_vector: Optional[str] = None
-    fixed_version: Optional[str] = None
-    workaround: Optional[str] = None
-    published: Optional[datetime] = None
-    modified: Optional[datetime] = None
+    cvss_score: float | None = None
+    cvss_vector: str | None = None
+    fixed_version: str | None = None
+    workaround: str | None = None
+    published: datetime | None = None
+    modified: datetime | None = None
     references: list[str] = field(default_factory=list)
     aliases: list[str] = field(default_factory=list)
     cwe_ids: list[str] = field(default_factory=list)
@@ -156,8 +156,8 @@ class LicenseInfo:
     """License information for a package."""
 
     name: str
-    spdx_id: Optional[str] = None
-    url: Optional[str] = None
+    spdx_id: str | None = None
+    url: str | None = None
     is_osi_approved: bool = False
     is_copyleft: bool = False
     category: LicenseCategory = LicenseCategory.UNKNOWN
@@ -167,15 +167,34 @@ class LicenseInfo:
         """Create LicenseInfo from SPDX identifier."""
         # Permissive licenses
         permissive = {
-            "MIT", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "ISC",
-            "Unlicense", "CC0-1.0", "0BSD", "BlueOak-1.0.0", "MIT-0",
+            "MIT",
+            "Apache-2.0",
+            "BSD-2-Clause",
+            "BSD-3-Clause",
+            "ISC",
+            "Unlicense",
+            "CC0-1.0",
+            "0BSD",
+            "BlueOak-1.0.0",
+            "MIT-0",
         }
         # Weak copyleft
-        weak_copyleft = {"LGPL-2.1-only", "LGPL-2.1-or-later", "LGPL-3.0-only", "LGPL-3.0-or-later", "MPL-2.0", "EPL-2.0"}
+        weak_copyleft = {
+            "LGPL-2.1-only",
+            "LGPL-2.1-or-later",
+            "LGPL-3.0-only",
+            "LGPL-3.0-or-later",
+            "MPL-2.0",
+            "EPL-2.0",
+        }
         # Strong copyleft
         strong_copyleft = {
-            "GPL-2.0-only", "GPL-2.0-or-later", "GPL-3.0-only", "GPL-3.0-or-later",
-            "AGPL-3.0-only", "AGPL-3.0-or-later",
+            "GPL-2.0-only",
+            "GPL-2.0-or-later",
+            "GPL-3.0-only",
+            "GPL-3.0-or-later",
+            "AGPL-3.0-only",
+            "AGPL-3.0-or-later",
         }
         # Public domain
         public_domain = {"Unlicense", "CC0-1.0", "WTFPL"}
@@ -208,7 +227,7 @@ class CheckResult:
 
     packages: list[Package] = field(default_factory=list)
     timestamp: datetime = field(default_factory=datetime.now)
-    path: Optional[Path] = None
+    path: Path | None = None
 
     @property
     def total_packages(self) -> int:
@@ -246,7 +265,7 @@ class AuditResult:
     packages: list[Package] = field(default_factory=list)
     vulnerabilities: list[tuple[Package, Vulnerability]] = field(default_factory=list)
     timestamp: datetime = field(default_factory=datetime.now)
-    path: Optional[Path] = None
+    path: Path | None = None
 
     @property
     def total_vulnerabilities(self) -> int:
@@ -273,7 +292,9 @@ class AuditResult:
         """Number of low severity vulnerabilities."""
         return sum(1 for _, v in self.vulnerabilities if v.severity == Severity.LOW)
 
-    def vulnerabilities_by_severity(self, min_severity: Severity) -> list[tuple[Package, Vulnerability]]:
+    def vulnerabilities_by_severity(
+        self, min_severity: Severity
+    ) -> list[tuple[Package, Vulnerability]]:
         """Get vulnerabilities at or above the specified severity."""
         return [(p, v) for p, v in self.vulnerabilities if v.severity >= min_severity]
 
@@ -286,7 +307,7 @@ class LicenseResult:
     violations: list[tuple[Package, str]] = field(default_factory=list)
     warnings: list[tuple[Package, str]] = field(default_factory=list)
     timestamp: datetime = field(default_factory=datetime.now)
-    path: Optional[Path] = None
+    path: Path | None = None
 
     @property
     def has_violations(self) -> bool:

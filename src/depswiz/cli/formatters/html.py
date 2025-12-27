@@ -3,9 +3,8 @@
 from html import escape
 
 from depswiz import __version__
-from depswiz.core.models import CheckResult, AuditResult, LicenseResult, UpdateType
 from depswiz.cli.formatters.base import OutputFormatter
-
+from depswiz.core.models import AuditResult, CheckResult, LicenseResult, UpdateType
 
 HTML_TEMPLATE = """<!DOCTYPE html>
 <html lang="en">
@@ -130,7 +129,7 @@ class HtmlFormatter(OutputFormatter):
 
         content = f"""
         <h1>Dependency Check Report</h1>
-        <p class="timestamp">Generated on {result.timestamp.strftime('%Y-%m-%d %H:%M:%S')}</p>
+        <p class="timestamp">Generated on {result.timestamp.strftime("%Y-%m-%d %H:%M:%S")}</p>
 
         <div class="summary">
             <div class="stat-card">
@@ -171,10 +170,10 @@ class HtmlFormatter(OutputFormatter):
             content += f"""
                 <tr>
                     <td>{escape(pkg.display_name)}</td>
-                    <td>{escape(pkg.language or 'unknown')}</td>
-                    <td>{escape(pkg.constraint or '-')}</td>
-                    <td>{escape(pkg.current_version or '?')}</td>
-                    <td>{escape(pkg.latest_version or '?')}</td>
+                    <td>{escape(pkg.language or "unknown")}</td>
+                    <td>{escape(pkg.constraint or "-")}</td>
+                    <td>{escape(pkg.current_version or "?")}</td>
+                    <td>{escape(pkg.latest_version or "?")}</td>
                     <td>{status_badge}</td>
                 </tr>
             """
@@ -211,7 +210,7 @@ class HtmlFormatter(OutputFormatter):
         """Format an audit result as HTML."""
         content = f"""
         <h1>Security Audit Report</h1>
-        <p class="timestamp">Generated on {result.timestamp.strftime('%Y-%m-%d %H:%M:%S')}</p>
+        <p class="timestamp">Generated on {result.timestamp.strftime("%Y-%m-%d %H:%M:%S")}</p>
 
         <div class="summary">
             <div class="stat-card">
@@ -255,11 +254,11 @@ class HtmlFormatter(OutputFormatter):
                 content += f"""
                     <tr>
                         <td>{escape(pkg.name)}</td>
-                        <td>{escape(pkg.current_version or '?')}</td>
+                        <td>{escape(pkg.current_version or "?")}</td>
                         <td>{severity_badge}</td>
                         <td>{escape(vuln.id)}</td>
-                        <td>{escape(vuln.title[:60] + '...' if len(vuln.title) > 60 else vuln.title)}</td>
-                        <td>{escape(vuln.fixed_version or '-')}</td>
+                        <td>{escape(vuln.title[:60] + "..." if len(vuln.title) > 60 else vuln.title)}</td>
+                        <td>{escape(vuln.fixed_version or "-")}</td>
                     </tr>
                 """
 
@@ -280,7 +279,7 @@ class HtmlFormatter(OutputFormatter):
         """Format a license result as HTML."""
         content = f"""
         <h1>License Compliance Report</h1>
-        <p class="timestamp">Generated on {result.timestamp.strftime('%Y-%m-%d %H:%M:%S')}</p>
+        <p class="timestamp">Generated on {result.timestamp.strftime("%Y-%m-%d %H:%M:%S")}</p>
 
         <div class="summary">
             <div class="stat-card">
@@ -355,8 +354,8 @@ class HtmlFormatter(OutputFormatter):
                 content += f"""
                     <tr>
                         <td>{escape(pkg.name)}</td>
-                        <td>{escape(pkg.current_version or '?')}</td>
-                        <td>{escape(license_id or 'UNKNOWN')}</td>
+                        <td>{escape(pkg.current_version or "?")}</td>
+                        <td>{escape(license_id or "UNKNOWN")}</td>
                         <td>{escape(category)}</td>
                     </tr>
                 """

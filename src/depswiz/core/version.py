@@ -1,12 +1,11 @@
 """Version parsing and comparison utilities."""
 
-from typing import Optional
+from packaging.version import InvalidVersion, Version
 
-from packaging.version import Version, InvalidVersion
 from depswiz.core.models import UpdateType
 
 
-def parse_version(version_str: str) -> Optional[Version]:
+def parse_version(version_str: str) -> Version | None:
     """Parse a version string into a Version object."""
     try:
         return Version(version_str)
@@ -14,7 +13,7 @@ def parse_version(version_str: str) -> Optional[Version]:
         return None
 
 
-def determine_update_type(current: str, latest: str) -> Optional[UpdateType]:
+def determine_update_type(current: str, latest: str) -> UpdateType | None:
     """Determine the type of update between two versions."""
     current_ver = parse_version(current)
     latest_ver = parse_version(latest)
@@ -36,7 +35,7 @@ def determine_update_type(current: str, latest: str) -> Optional[UpdateType]:
     return UpdateType.PATCH
 
 
-def is_compatible_update(current: str, latest: str, constraint: Optional[str] = None) -> bool:
+def is_compatible_update(current: str, latest: str, constraint: str | None = None) -> bool:
     """Check if an update is compatible with the version constraint."""
     current_ver = parse_version(current)
     latest_ver = parse_version(latest)
@@ -86,14 +85,14 @@ def normalize_version(version_str: str) -> str:
     return str(ver)
 
 
-def extract_version_from_constraint(constraint: str) -> Optional[str]:
+def extract_version_from_constraint(constraint: str) -> str | None:
     """Extract the base version from a constraint string."""
     constraint = constraint.strip()
 
     # Remove common prefixes
     for prefix in [">=", "<=", "==", "!=", "~=", "^", "~", ">", "<"]:
         if constraint.startswith(prefix):
-            constraint = constraint[len(prefix):]
+            constraint = constraint[len(prefix) :]
             break
 
     # Take first part if there's a comma

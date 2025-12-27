@@ -1,27 +1,28 @@
 """Core scanning logic for depswiz."""
 
 import asyncio
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, Optional
 
 import httpx
 
-from depswiz.core.config import Config
-from depswiz.core.models import Package, CheckResult, AuditResult, LicenseResult
 from depswiz.core.cache import DepsWizCache
-from depswiz.plugins import get_plugins_for_path, get_plugin
-from depswiz.security.vulnerabilities import VulnerabilityAggregator
+from depswiz.core.config import Config
+from depswiz.core.models import AuditResult, CheckResult, LicenseResult, Package
+from depswiz.plugins import get_plugin, get_plugins_for_path
+from depswiz.plugins.base import LanguagePlugin
 from depswiz.security.licenses import LicenseChecker
+from depswiz.security.vulnerabilities import VulnerabilityAggregator
 
 
 async def scan_dependencies(
     path: Path,
-    languages: Optional[list[str]] = None,
+    languages: list[str] | None = None,
     recursive: bool = False,
     workspace: bool = False,
     include_dev: bool = True,
-    config: Optional[Config] = None,
-    progress_callback: Optional[Callable[[str], None]] = None,
+    config: Config | None = None,
+    progress_callback: Callable[[str], None] | None = None,
 ) -> CheckResult:
     """Scan dependencies in a project.
 
@@ -57,7 +58,9 @@ async def scan_dependencies(
         update_progress("No supported project files found")
         return CheckResult(packages=[], path=path)
 
-    update_progress(f"Found {len(plugins)} language(s): {', '.join(p.display_name for p in plugins)}")
+    update_progress(
+        f"Found {len(plugins)} language(s): {', '.join(p.display_name for p in plugins)}"
+    )
 
     # Scan each plugin
     async with httpx.AsyncClient(timeout=config.network.timeout_seconds) as client:
@@ -82,7 +85,11 @@ async def scan_dependencies(
                 # Fetch latest versions concurrently
                 semaphore = asyncio.Semaphore(config.network.max_concurrent_requests)
 
-                async def fetch_latest(pkg: Package) -> Package:
+                async def fetch_latest(
+                    pkg: Package,
+                    plugin: LanguagePlugin = plugin,
+                    semaphore: asyncio.Semaphore = semaphore,
+                ) -> Package:
                     async with semaphore:
                         # Check cache first
                         cached = cache.get_package_info(plugin.name, pkg.name)
@@ -91,7 +98,9 @@ async def scan_dependencies(
 
                         latest = await plugin.fetch_latest_version(client, pkg)
                         if latest:
-                            cache.set_package_info(plugin.name, pkg.name, {"latest_version": latest})
+                            cache.set_package_info(
+                                plugin.name, pkg.name, {"latest_version": latest}
+                            )
                             return pkg.with_latest_version(latest)
                         return pkg
 
@@ -107,8 +116,8 @@ async def scan_dependencies(
 
 async def audit_packages(
     packages: list[Package],
-    config: Optional[Config] = None,
-    progress_callback: Optional[Callable[[str], None]] = None,
+    config: Config | None = None,
+    progress_callback: Callable[[str], None] | None = None,
 ) -> AuditResult:
     """Audit packages for vulnerabilities.
 
@@ -142,8 +151,8 @@ async def audit_packages(
 
 async def check_licenses(
     packages: list[Package],
-    config: Optional[Config] = None,
-    progress_callback: Optional[Callable[[str], None]] = None,
+    config: Config | None = None,
+    progress_callback: Callable[[str], None] | None = None,
 ) -> LicenseResult:
     """Check license compliance for packages.
 

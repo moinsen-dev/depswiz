@@ -1,13 +1,11 @@
 """OSV (Open Source Vulnerabilities) data source."""
 
 from datetime import datetime
-from typing import Optional
 
 import httpx
 
-from depswiz.core.models import Package, Vulnerability, Severity
+from depswiz.core.models import Package, Severity, Vulnerability
 from depswiz.security.sources.base import VulnerabilitySource
-
 
 # Mapping from plugin names to OSV ecosystem names
 ECOSYSTEM_MAP = {
@@ -73,7 +71,7 @@ class OsvSource(VulnerabilitySource):
         except Exception:
             return []
 
-    def _parse_vulnerability(self, data: dict) -> Optional[Vulnerability]:
+    def _parse_vulnerability(self, data: dict) -> Vulnerability | None:
         """Parse OSV vulnerability data into our model."""
         try:
             vuln_id = data.get("id", "")
@@ -127,7 +125,9 @@ class OsvSource(VulnerabilitySource):
                         affected_str += f" (+{len(versions) - 5} more)"
 
             # Get references
-            references = [ref.get("url", "") for ref in data.get("references", []) if ref.get("url")]
+            references = [
+                ref.get("url", "") for ref in data.get("references", []) if ref.get("url")
+            ]
 
             # Parse dates
             published = None
@@ -150,7 +150,8 @@ class OsvSource(VulnerabilitySource):
                 if "cwe.mitre.org" in url:
                     # Extract CWE ID from URL
                     import re
-                    match = re.search(r'CWE-(\d+)', url)
+
+                    match = re.search(r"CWE-(\d+)", url)
                     if match:
                         cwe_ids.append(f"CWE-{match.group(1)}")
 
@@ -174,13 +175,12 @@ class OsvSource(VulnerabilitySource):
         except Exception:
             return None
 
-    def _parse_cvss_score(self, vector: str) -> Optional[float]:
+    def _parse_cvss_score(self, vector: str) -> float | None:
         """Extract CVSS score from a CVSS vector string."""
         if not vector:
             return None
 
         # Try to find score in common formats
-        import re
 
         # CVSS:3.1/AV:N/AC:L/... format doesn't include score
         # We need to calculate or estimate

@@ -3,11 +3,10 @@
 import re
 import tomllib
 from pathlib import Path
-from typing import Optional
 
 import httpx
 
-from depswiz.core.models import Package, LicenseInfo
+from depswiz.core.models import LicenseInfo, Package
 from depswiz.plugins.base import LanguagePlugin
 
 
@@ -104,10 +103,10 @@ class PythonPlugin(LanguagePlugin):
 
         return packages
 
-    def _parse_requirement_string(self, req: str, is_dev: bool = False) -> Optional[Package]:
+    def _parse_requirement_string(self, req: str, is_dev: bool = False) -> Package | None:
         """Parse a PEP 508 requirement string."""
         # Pattern to match package name, extras, and version constraint
-        pattern = r'^([a-zA-Z0-9][-a-zA-Z0-9._]*)(\[[^\]]+\])?\s*(.*)$'
+        pattern = r"^([a-zA-Z0-9][-a-zA-Z0-9._]*)(\[[^\]]+\])?\s*(.*)$"
         match = re.match(pattern, req.strip())
 
         if not match:
@@ -129,7 +128,7 @@ class PythonPlugin(LanguagePlugin):
         version = None
         if constraint:
             # Try to extract the minimum version from >= or ==
-            version_match = re.search(r'[>=<~^!]*\s*(\d+\.\d+[\.\d]*)', constraint)
+            version_match = re.search(r"[>=<~^!]*\s*(\d+\.\d+[\.\d]*)", constraint)
             if version_match:
                 version = version_match.group(1)
 
@@ -143,7 +142,7 @@ class PythonPlugin(LanguagePlugin):
 
     def _parse_poetry_dependency(
         self, name: str, version_spec: str | dict, is_dev: bool = False
-    ) -> Optional[Package]:
+    ) -> Package | None:
         """Parse a Poetry-style dependency."""
         if isinstance(version_spec, dict):
             version = version_spec.get("version", "")
@@ -158,7 +157,7 @@ class PythonPlugin(LanguagePlugin):
 
         if constraint:
             # Extract version number from constraint
-            version_match = re.search(r'[>=<~^]*\s*(\d+\.\d+[\.\d]*)', str(constraint))
+            version_match = re.search(r"[>=<~^]*\s*(\d+\.\d+[\.\d]*)", str(constraint))
             if version_match:
                 current_version = version_match.group(1)
 
@@ -202,11 +201,7 @@ class PythonPlugin(LanguagePlugin):
             content = path.read_text()
 
             # Look for install_requires
-            install_match = re.search(
-                r'install_requires\s*=\s*\[(.*?)\]',
-                content,
-                re.DOTALL
-            )
+            install_match = re.search(r"install_requires\s*=\s*\[(.*?)\]", content, re.DOTALL)
             if install_match:
                 deps_str = install_match.group(1)
                 for dep in re.findall(r'["\']([^"\']+)["\']', deps_str):
@@ -215,15 +210,11 @@ class PythonPlugin(LanguagePlugin):
                         packages.append(pkg)
 
             # Look for extras_require
-            extras_match = re.search(
-                r'extras_require\s*=\s*\{(.*?)\}',
-                content,
-                re.DOTALL
-            )
+            extras_match = re.search(r"extras_require\s*=\s*\{(.*?)\}", content, re.DOTALL)
             if extras_match:
                 # Basic parsing of extras
                 for dep in re.findall(r'["\']([^"\']+)["\']', extras_match.group(1)):
-                    if re.match(r'^[a-zA-Z]', dep):
+                    if re.match(r"^[a-zA-Z]", dep):
                         pkg = self._parse_requirement_string(dep, is_dev=True)
                         if pkg:
                             packages.append(pkg)
@@ -277,9 +268,7 @@ class PythonPlugin(LanguagePlugin):
 
         return packages
 
-    async def fetch_latest_version(
-        self, client: httpx.AsyncClient, package: Package
-    ) -> Optional[str]:
+    async def fetch_latest_version(self, client: httpx.AsyncClient, package: Package) -> str | None:
         """Query PyPI for the latest version."""
         try:
             url = f"https://pypi.org/pypi/{package.name}/json"
@@ -294,9 +283,7 @@ class PythonPlugin(LanguagePlugin):
 
         return None
 
-    async def fetch_package_info(
-        self, client: httpx.AsyncClient, package: Package
-    ) -> Optional[dict]:
+    async def fetch_package_info(self, client: httpx.AsyncClient, package: Package) -> dict | None:
         """Fetch full package information from PyPI."""
         try:
             url = f"https://pypi.org/pypi/{package.name}/json"
@@ -312,7 +299,7 @@ class PythonPlugin(LanguagePlugin):
 
     async def fetch_license(
         self, client: httpx.AsyncClient, package: Package
-    ) -> Optional[LicenseInfo]:
+    ) -> LicenseInfo | None:
         """Fetch license information from PyPI."""
         try:
             info = await self.fetch_package_info(client, package)
@@ -353,7 +340,7 @@ class PythonPlugin(LanguagePlugin):
 
         return LicenseInfo(name=license_name, spdx_id=None)
 
-    def _guess_spdx_id(self, license_str: str) -> Optional[str]:
+    def _guess_spdx_id(self, license_str: str) -> str | None:
         """Try to guess SPDX ID from license string."""
         license_lower = license_str.lower()
 

@@ -1,12 +1,11 @@
 """Tests for language plugins."""
 
-import pytest
 from pathlib import Path
 
-from depswiz.plugins.python.plugin import PythonPlugin
-from depswiz.plugins.rust.plugin import RustPlugin
 from depswiz.plugins.dart.plugin import DartPlugin
 from depswiz.plugins.javascript.plugin import JavaScriptPlugin
+from depswiz.plugins.python.plugin import PythonPlugin
+from depswiz.plugins.rust.plugin import RustPlugin
 
 
 class TestPythonPlugin:

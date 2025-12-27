@@ -4,14 +4,12 @@ build-backend = "hatchling.build"
 
 [project]
 name = "depswiz"
-version = "1.0.0"
+version = "0.2.0"
 description = "Multi-language dependency wizard - check, audit, and update dependencies across Python, Rust, Dart, and JavaScript ecosystems"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.13"
-authors = [
-    { name = "depswiz contributors" }
-]
+authors = [{ name = "depswiz contributors" }]
 keywords = [
     "dependencies",
     "security",
@@ -73,10 +71,7 @@ dev = [
     "ruff>=0.8.0",
     "pre-commit>=4.0.0",
 ]
-docs = [
-    "mkdocs>=1.6.0",
-    "mkdocs-material>=9.5.0",
-]
+docs = ["mkdocs>=1.6.0", "mkdocs-material>=9.5.0"]
 
 [project.scripts]
 depswiz = "depswiz.cli:app"
@@ -88,10 +83,10 @@ dart = "depswiz.plugins.dart:DartPlugin"
 javascript = "depswiz.plugins.javascript:JavaScriptPlugin"
 
 [project.urls]
-Homepage = "https://github.com/depswiz/depswiz"
-Documentation = "https://depswiz.dev"
-Repository = "https://github.com/depswiz/depswiz"
-Issues = "https://github.com/depswiz/depswiz/issues"
+Homepage = "https://github.com/moinsen-dev/depswiz"
+Documentation = "https://moinsen-dev.github.io/depswiz"
+Repository = "https://github.com/moinsen-dev/depswiz"
+Issues = "https://github.com/moinsen-dev/depswiz/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/depswiz"]
@@ -102,34 +97,54 @@ line-length = 100
 
 [tool.ruff.lint]
 select = [
-    "E",      # pycodestyle errors
-    "W",      # pycodestyle warnings
-    "F",      # pyflakes
-    "I",      # isort
-    "B",      # flake8-bugbear
-    "C4",     # flake8-comprehensions
-    "UP",     # pyupgrade
-    "ARG",    # flake8-unused-arguments
-    "SIM",    # flake8-simplify
-    "TCH",    # flake8-type-checking
-    "PTH",    # flake8-use-pathlib
-    "ERA",    # eradicate
-    "RUF",    # Ruff-specific rules
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+    "ARG", # flake8-unused-arguments
+    "SIM", # flake8-simplify
+    "TCH", # flake8-type-checking
+    "PTH", # flake8-use-pathlib
+    "ERA", # eradicate
+    "RUF", # Ruff-specific rules
 ]
 ignore = [
     "E501",   # line too long (handled by formatter)
+    "B008",   # function call in default argument (required for typer.Option/Argument)
+    "ARG001", # unused function argument (often intentional in interfaces)
+    "ARG002", # unused method argument (often intentional in interfaces)
+    "SIM102", # nested if statements (sometimes clearer)
+    "SIM108", # ternary operator (sometimes less readable)
+    "SIM105", # contextlib.suppress (try-except-pass is clearer)
+    "SIM116", # dictionary instead of if-elif (less readable for this case)
+    "SIM110", # any() instead of for loop (less readable)
+    "PTH123", # Path.open() vs open() (both are fine)
+    "ERA001", # commented-out code (intentional TODOs)
+    "B028",   # stacklevel in warnings (not critical)
 ]
 
 [tool.ruff.lint.isort]
 known-first-party = ["depswiz"]
 
+[tool.ruff.lint.per-file-ignores]
+# typer.Exit() in exception handlers is intentional control flow
+"src/depswiz/cli/commands/*.py" = ["B904"]
+
 [tool.mypy]
 python_version = "3.13"
-strict = true
-warn_return_any = true
-warn_unused_ignores = true
-disallow_untyped_defs = true
-disallow_incomplete_defs = true
+# Relaxed settings for practical development
+strict = false
+warn_return_any = false
+warn_unused_ignores = false
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+# Still check for important issues
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

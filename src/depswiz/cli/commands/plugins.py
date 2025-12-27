@@ -4,7 +4,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from depswiz.plugins.registry import list_plugins, get_plugin
+from depswiz.plugins.registry import get_plugin, list_plugins
 
 app = typer.Typer()
 console = Console()
@@ -50,13 +50,15 @@ def info_cmd(
         raise typer.Exit(code=1)
 
     console.print(f"\n[bold]{plugin.display_name}[/bold] ({plugin.name})")
-    console.print(f"\n[cyan]Manifest files:[/cyan]")
+    console.print("\n[cyan]Manifest files:[/cyan]")
     for pattern in plugin.manifest_patterns:
         console.print(f"  - {pattern}")
 
-    console.print(f"\n[cyan]Lockfile files:[/cyan]")
+    console.print("\n[cyan]Lockfile files:[/cyan]")
     for pattern in plugin.lockfile_patterns:
         console.print(f"  - {pattern}")
 
     console.print(f"\n[cyan]OSV Ecosystem:[/cyan] {plugin.ecosystem}")
-    console.print(f"[cyan]Workspace support:[/cyan] {'Yes' if plugin.supports_workspaces() else 'No'}")
+    console.print(
+        f"[cyan]Workspace support:[/cyan] {'Yes' if plugin.supports_workspaces() else 'No'}"
+    )

@@ -2,17 +2,15 @@
 
 import asyncio
 from pathlib import Path
-from typing import Optional
 
 import typer
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
-from rich.table import Table
 
+from depswiz.cli.formatters import CliFormatter, HtmlFormatter, JsonFormatter, MarkdownFormatter
 from depswiz.core.config import load_config
-from depswiz.core.models import Package, UpdateType, CheckResult
+from depswiz.core.models import CheckResult, UpdateType
 from depswiz.core.scanner import scan_dependencies
-from depswiz.cli.formatters import CliFormatter, JsonFormatter, MarkdownFormatter, HtmlFormatter
 
 app = typer.Typer(invoke_without_command=True)
 console = Console()
@@ -33,13 +31,13 @@ def get_formatter(format_type: str):
 def check(
     ctx: typer.Context,
     path: Path = typer.Argument(
-        Path("."),
+        Path(),
         help="Project path to check",
         exists=True,
         file_okay=False,
         dir_okay=True,
     ),
-    language: Optional[list[str]] = typer.Option(
+    language: list[str] | None = typer.Option(
         None,
         "--language",
         "-l",
@@ -84,7 +82,7 @@ def check(
         "-f",
         help="Output format: cli, json, markdown, html",
     ),
-    output: Optional[Path] = typer.Option(
+    output: Path | None = typer.Option(
         None,
         "--output",
         "-o",
@@ -102,7 +100,7 @@ def check(
     if workspace:
         config.check.workspace = workspace
 
-    verbose = ctx.obj.get("verbose", False) if ctx.obj else False
+    ctx.obj.get("verbose", False) if ctx.obj else False
     quiet = ctx.obj.get("quiet", False) if ctx.obj else False
 
     # Run the scan
@@ -167,7 +165,8 @@ def filter_by_strategy(result: CheckResult, strategy: str) -> CheckResult:
         return result
 
     filtered_packages = [
-        pkg for pkg in result.packages
+        pkg
+        for pkg in result.packages
         if pkg.update_type is None or pkg.update_type in allowed_types
     ]
 

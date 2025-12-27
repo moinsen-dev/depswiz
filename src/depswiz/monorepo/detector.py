@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 from depswiz.plugins import get_all_plugins
 
@@ -13,7 +12,7 @@ class WorkspaceMember:
 
     path: Path
     language: str
-    name: Optional[str] = None
+    name: str | None = None
 
 
 class WorkspaceDetector:
@@ -35,11 +34,13 @@ class WorkspaceDetector:
                 workspace_paths = plugin.detect_workspaces(path)
                 for workspace_path in workspace_paths:
                     name = self._get_workspace_name(workspace_path, plugin.name)
-                    members.append(WorkspaceMember(
-                        path=workspace_path,
-                        language=plugin.name,
-                        name=name,
-                    ))
+                    members.append(
+                        WorkspaceMember(
+                            path=workspace_path,
+                            language=plugin.name,
+                            name=name,
+                        )
+                    )
 
         return members
 
@@ -59,6 +60,7 @@ class WorkspaceDetector:
         """Get package name from Cargo.toml."""
         try:
             import tomllib
+
             with open(path / "Cargo.toml", "rb") as f:
                 data = tomllib.load(f)
             return data.get("package", {}).get("name", path.name)
@@ -69,6 +71,7 @@ class WorkspaceDetector:
         """Get package name from package.json."""
         try:
             import json
+
             with open(path / "package.json") as f:
                 data = json.load(f)
             return data.get("name", path.name)
@@ -79,6 +82,7 @@ class WorkspaceDetector:
         """Get package name from pubspec.yaml."""
         try:
             import yaml
+
             with open(path / "pubspec.yaml") as f:
                 data = yaml.safe_load(f)
             return data.get("name", path.name)

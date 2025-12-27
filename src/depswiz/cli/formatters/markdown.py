@@ -1,8 +1,8 @@
 """Markdown output formatter for depswiz."""
 
 from depswiz import __version__
-from depswiz.core.models import CheckResult, AuditResult, LicenseResult, UpdateType
 from depswiz.cli.formatters.base import OutputFormatter
+from depswiz.core.models import AuditResult, CheckResult, LicenseResult, UpdateType
 
 
 class MarkdownFormatter(OutputFormatter):
@@ -28,12 +28,14 @@ class MarkdownFormatter(OutputFormatter):
         # Update breakdown
         breakdown = result.update_breakdown
         if any(breakdown.values()):
-            lines.extend([
-                "### Update Types",
-                "",
-                "| Type | Count |",
-                "|------|-------|",
-            ])
+            lines.extend(
+                [
+                    "### Update Types",
+                    "",
+                    "| Type | Count |",
+                    "|------|-------|",
+                ]
+            )
             for ut in [UpdateType.MAJOR, UpdateType.MINOR, UpdateType.PATCH]:
                 if breakdown[ut]:
                     lines.append(f"| {ut.value.title()} | {breakdown[ut]} |")
@@ -42,12 +44,14 @@ class MarkdownFormatter(OutputFormatter):
         # Outdated packages
         outdated = result.outdated_packages
         if outdated:
-            lines.extend([
-                "## Outdated Packages",
-                "",
-                "| Package | Current | Latest | Type |",
-                "|---------|---------|--------|------|",
-            ])
+            lines.extend(
+                [
+                    "## Outdated Packages",
+                    "",
+                    "| Package | Current | Latest | Type |",
+                    "|---------|---------|--------|------|",
+                ]
+            )
             for pkg in outdated:
                 update_type = pkg.update_type.value if pkg.update_type else "unknown"
                 lines.append(
@@ -59,13 +63,15 @@ class MarkdownFormatter(OutputFormatter):
         # Up to date packages (collapsed)
         up_to_date = result.up_to_date_packages
         if up_to_date:
-            lines.extend([
-                "<details>",
-                "<summary>Up to Date Packages</summary>",
-                "",
-                "| Package | Version |",
-                "|---------|---------|",
-            ])
+            lines.extend(
+                [
+                    "<details>",
+                    "<summary>Up to Date Packages</summary>",
+                    "",
+                    "| Package | Version |",
+                    "|---------|---------|",
+                ]
+            )
             for pkg in up_to_date:
                 lines.append(f"| {pkg.display_name} | {pkg.current_version or '?'} |")
             lines.extend(["", "</details>", ""])
@@ -87,31 +93,35 @@ class MarkdownFormatter(OutputFormatter):
             lines.append("**No vulnerabilities found.**")
             return "\n".join(lines)
 
-        lines.extend([
-            f"**{result.total_vulnerabilities} vulnerabilities found**",
-            "",
-            "| Severity | Count |",
-            "|----------|-------|",
-            f"| Critical | {result.critical_count} |",
-            f"| High | {result.high_count} |",
-            f"| Medium | {result.medium_count} |",
-            f"| Low | {result.low_count} |",
-            "",
-            "## Vulnerabilities",
-            "",
-        ])
+        lines.extend(
+            [
+                f"**{result.total_vulnerabilities} vulnerabilities found**",
+                "",
+                "| Severity | Count |",
+                "|----------|-------|",
+                f"| Critical | {result.critical_count} |",
+                f"| High | {result.high_count} |",
+                f"| Medium | {result.medium_count} |",
+                f"| Low | {result.low_count} |",
+                "",
+                "## Vulnerabilities",
+                "",
+            ]
+        )
 
         for pkg, vuln in result.vulnerabilities:
             severity_badge = self._severity_badge(vuln.severity.value)
-            lines.extend([
-                f"### {vuln.id} - {pkg.name}",
-                "",
-                f"**Severity:** {severity_badge}",
-                f"**Package:** {pkg.name} @ {pkg.current_version or '?'}",
-                "",
-                f"> {vuln.title}",
-                "",
-            ])
+            lines.extend(
+                [
+                    f"### {vuln.id} - {pkg.name}",
+                    "",
+                    f"**Severity:** {severity_badge}",
+                    f"**Package:** {pkg.name} @ {pkg.current_version or '?'}",
+                    "",
+                    f"> {vuln.title}",
+                    "",
+                ]
+            )
 
             if vuln.fixed_version:
                 lines.append(f"**Fixed in:** {vuln.fixed_version}")
@@ -125,10 +135,12 @@ class MarkdownFormatter(OutputFormatter):
 
         # Recommendations
         if show_fix:
-            lines.extend([
-                "## Recommendations",
-                "",
-            ])
+            lines.extend(
+                [
+                    "## Recommendations",
+                    "",
+                ]
+            )
             for pkg, vuln in result.vulnerabilities:
                 if vuln.fixed_version:
                     lines.append(f"- **{pkg.name}**: upgrade to `>= {vuln.fixed_version}`")
@@ -166,31 +178,37 @@ class MarkdownFormatter(OutputFormatter):
 
         # Violations
         if result.violations:
-            lines.extend([
-                "## Violations",
-                "",
-            ])
+            lines.extend(
+                [
+                    "## Violations",
+                    "",
+                ]
+            )
             for pkg, reason in result.violations:
                 lines.append(f"- **{pkg.name}**: {reason}")
             lines.append("")
 
         # Warnings
         if result.warnings:
-            lines.extend([
-                "## Warnings",
-                "",
-            ])
+            lines.extend(
+                [
+                    "## Warnings",
+                    "",
+                ]
+            )
             for pkg, reason in result.warnings:
                 lines.append(f"- **{pkg.name}**: {reason}")
             lines.append("")
 
         if not summary_only:
-            lines.extend([
-                "## All Packages",
-                "",
-                "| Package | Version | License | Category |",
-                "|---------|---------|---------|----------|",
-            ])
+            lines.extend(
+                [
+                    "## All Packages",
+                    "",
+                    "| Package | Version | License | Category |",
+                    "|---------|---------|---------|----------|",
+                ]
+            )
             for pkg in result.packages:
                 license_id = pkg.license_info.spdx_id if pkg.license_info else "UNKNOWN"
                 category = pkg.license_info.category.value if pkg.license_info else "unknown"

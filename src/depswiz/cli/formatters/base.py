@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 
-from depswiz.core.models import CheckResult, AuditResult, LicenseResult
+from depswiz.core.models import AuditResult, CheckResult, LicenseResult
 
 
 class OutputFormatter(ABC):

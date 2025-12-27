@@ -1,13 +1,12 @@
 """Main CLI application for depswiz."""
 
 from pathlib import Path
-from typing import Optional
 
 import typer
 from rich.console import Console
 
 from depswiz import __version__
-from depswiz.cli.commands import check, audit, licenses, sbom, update, plugins, suggest
+from depswiz.cli.commands import audit, check, licenses, plugins, sbom, suggest, tools, update
 
 # Create the main app
 app = typer.Typer(
@@ -27,7 +26,10 @@ app.add_typer(licenses.app, name="licenses", help="Check license compliance")
 app.add_typer(sbom.app, name="sbom", help="Generate Software Bill of Materials")
 app.add_typer(update.app, name="update", help="Update dependencies")
 app.add_typer(plugins.app, name="plugins", help="List and manage plugins")
-app.add_typer(suggest.app, name="suggest", help="AI-powered upgrade suggestions (requires Claude Code)")
+app.add_typer(
+    suggest.app, name="suggest", help="AI-powered upgrade suggestions (requires Claude Code)"
+)
+app.add_typer(tools.app, name="tools", help="Check development tools for updates")
 
 
 @app.command()
@@ -39,7 +41,7 @@ def version() -> None:
 @app.callback()
 def main(
     ctx: typer.Context,
-    config: Optional[Path] = typer.Option(
+    config: Path | None = typer.Option(
         None,
         "--config",
         "-c",

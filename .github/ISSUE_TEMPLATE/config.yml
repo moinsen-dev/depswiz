@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions & Discussions
+    url: https://github.com/moinsen-dev/depswiz/discussions
+    about: Ask questions and discuss ideas
+  - name: Security Issues
+    url: https://github.com/moinsen-dev/depswiz/security/advisories/new
+    about: Report security vulnerabilities privately

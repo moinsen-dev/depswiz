@@ -3,7 +3,6 @@
 import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
 
 from depswiz.core.models import Severity
 
@@ -12,8 +11,8 @@ from depswiz.core.models import Severity
 class LanguageConfig:
     """Configuration for a specific language."""
 
-    manifest: Optional[str] = None
-    lockfile: Optional[str] = None
+    manifest: str | None = None
+    lockfile: str | None = None
     include_dev: bool = True
     dependency_groups: list[str] = field(default_factory=list)
 
@@ -45,7 +44,14 @@ class LicensesConfig:
 
     policy_mode: str = "allow"  # "allow" or "deny"
     allowed: list[str] = field(
-        default_factory=lambda: ["MIT", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "ISC", "MPL-2.0"]
+        default_factory=lambda: [
+            "MIT",
+            "Apache-2.0",
+            "BSD-2-Clause",
+            "BSD-3-Clause",
+            "ISC",
+            "MPL-2.0",
+        ]
     )
     denied: list[str] = field(default_factory=lambda: ["GPL-3.0-only", "AGPL-3.0-only"])
     warn_copyleft: bool = True
@@ -169,7 +175,9 @@ def _load_licenses_config(data: dict) -> LicensesConfig:
     """Load licenses configuration from a dict."""
     return LicensesConfig(
         policy_mode=data.get("policy_mode", "allow"),
-        allowed=data.get("allowed", ["MIT", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "ISC", "MPL-2.0"]),
+        allowed=data.get(
+            "allowed", ["MIT", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "ISC", "MPL-2.0"]
+        ),
         denied=data.get("denied", ["GPL-3.0-only", "AGPL-3.0-only"]),
         warn_copyleft=data.get("warn_copyleft", True),
         fail_on_unknown=data.get("fail_on_unknown", False),
@@ -232,9 +240,7 @@ def load_config_from_toml(data: dict) -> Config:
         default_format=config_data.get("default_format", "cli"),
         verbose=config_data.get("verbose", False),
         color=config_data.get("color", True),
-        languages_enabled=languages_data.get(
-            "enabled", ["python", "rust", "dart", "javascript"]
-        ),
+        languages_enabled=languages_data.get("enabled", ["python", "rust", "dart", "javascript"]),
     )
 
     # Load language-specific configs
@@ -268,7 +274,7 @@ def load_config_from_toml(data: dict) -> Config:
     return config
 
 
-def find_config_file(start_path: Optional[Path] = None) -> Optional[Path]:
+def find_config_file(start_path: Path | None = None) -> Path | None:
     """Find the configuration file, searching in order of precedence."""
     if start_path is None:
         start_path = Path.cwd()
@@ -302,7 +308,7 @@ def find_config_file(start_path: Optional[Path] = None) -> Optional[Path]:
     return None
 
 
-def load_config(config_path: Optional[Path] = None, start_path: Optional[Path] = None) -> Config:
+def load_config(config_path: Path | None = None, start_path: Path | None = None) -> Config:
     """Load configuration from file or use defaults."""
     if config_path is None:
         config_path = find_config_file(start_path)

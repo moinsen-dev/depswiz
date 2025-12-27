@@ -2,11 +2,10 @@
 
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Optional
 
 import httpx
 
-from depswiz.core.models import Package, Vulnerability, LicenseInfo
+from depswiz.core.models import LicenseInfo, Package
 
 
 class LanguagePlugin(ABC):
@@ -93,9 +92,7 @@ class LanguagePlugin(ABC):
         """
 
     @abstractmethod
-    async def fetch_latest_version(
-        self, client: httpx.AsyncClient, package: Package
-    ) -> Optional[str]:
+    async def fetch_latest_version(self, client: httpx.AsyncClient, package: Package) -> str | None:
         """Query registry for the latest version of a package.
 
         Args:
@@ -107,9 +104,7 @@ class LanguagePlugin(ABC):
         """
 
     @abstractmethod
-    async def fetch_package_info(
-        self, client: httpx.AsyncClient, package: Package
-    ) -> Optional[dict]:
+    async def fetch_package_info(self, client: httpx.AsyncClient, package: Package) -> dict | None:
         """Fetch full package information from registry.
 
         Args:
@@ -123,7 +118,7 @@ class LanguagePlugin(ABC):
     @abstractmethod
     async def fetch_license(
         self, client: httpx.AsyncClient, package: Package
-    ) -> Optional[LicenseInfo]:
+    ) -> LicenseInfo | None:
         """Fetch license information from registry.
 
         Args:

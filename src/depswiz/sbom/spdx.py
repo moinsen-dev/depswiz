@@ -2,7 +2,7 @@
 
 import json
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from depswiz import __version__
 from depswiz.core.models import Package
@@ -31,7 +31,7 @@ class SpdxGenerator:
             JSON string of the SPDX SBOM
         """
         doc_id = str(uuid.uuid4())
-        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        timestamp = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
         # Generate unique SPDX IDs
         doc_spdxid = "SPDXRef-DOCUMENT"
@@ -65,11 +65,13 @@ class SpdxGenerator:
         sbom["packages"].append(main_package)
 
         # Add document describes relationship
-        sbom["relationships"].append({
-            "spdxElementId": doc_spdxid,
-            "relationshipType": "DESCRIBES",
-            "relatedSpdxElement": main_spdxid,
-        })
+        sbom["relationships"].append(
+            {
+                "spdxElementId": doc_spdxid,
+                "relationshipType": "DESCRIBES",
+                "relatedSpdxElement": main_spdxid,
+            }
+        )
 
         # Add dependency packages
         for pkg in packages:
@@ -77,11 +79,13 @@ class SpdxGenerator:
             sbom["packages"].append(pkg_data)
 
             # Add dependency relationship
-            sbom["relationships"].append({
-                "spdxElementId": main_spdxid,
-                "relationshipType": "DEPENDS_ON",
-                "relatedSpdxElement": pkg_data["SPDXID"],
-            })
+            sbom["relationships"].append(
+                {
+                    "spdxElementId": main_spdxid,
+                    "relationshipType": "DEPENDS_ON",
+                    "relatedSpdxElement": pkg_data["SPDXID"],
+                }
+            )
 
         return json.dumps(sbom, indent=2)
 
@@ -132,11 +136,12 @@ class SpdxGenerator:
         """Sanitize a name for use in SPDX IDs."""
         # SPDX IDs can only contain letters, numbers, dots, and hyphens
         import re
-        sanitized = re.sub(r'[^a-zA-Z0-9.-]', '-', name)
+
+        sanitized = re.sub(r"[^a-zA-Z0-9.-]", "-", name)
         # Remove consecutive hyphens
-        sanitized = re.sub(r'-+', '-', sanitized)
+        sanitized = re.sub(r"-+", "-", sanitized)
         # Remove leading/trailing hyphens
-        sanitized = sanitized.strip('-')
+        sanitized = sanitized.strip("-")
         return sanitized or "unknown"
 
     def _generate_purl(self, pkg: Package) -> str:

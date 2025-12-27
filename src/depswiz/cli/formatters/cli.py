@@ -2,12 +2,10 @@
 
 from rich.console import Console
 from rich.table import Table
-from rich.panel import Panel
-from rich.text import Text
 
 from depswiz import __version__
-from depswiz.core.models import CheckResult, AuditResult, LicenseResult, UpdateType, Severity
 from depswiz.cli.formatters.base import OutputFormatter
+from depswiz.core.models import AuditResult, CheckResult, LicenseResult, Severity, UpdateType
 
 
 class CliFormatter(OutputFormatter):
@@ -68,8 +66,10 @@ class CliFormatter(OutputFormatter):
 
         summary_text = ", ".join(summary_parts) if summary_parts else "none"
 
-        self.console.print(f"\n[bold]Summary:[/bold] {result.total_packages} packages checked, "
-                          f"{len(result.outdated_packages)} updates available ({summary_text})")
+        self.console.print(
+            f"\n[bold]Summary:[/bold] {result.total_packages} packages checked, "
+            f"{len(result.outdated_packages)} updates available ({summary_text})"
+        )
 
         if result.outdated_packages:
             self.console.print("\n[dim]Run `depswiz update` to update dependencies.[/dim]")
@@ -105,7 +105,9 @@ class CliFormatter(OutputFormatter):
             return ""
 
         # Vulnerability count by severity
-        self.console.print(f"\n[bold red]{result.total_vulnerabilities} vulnerabilities found[/bold red]")
+        self.console.print(
+            f"\n[bold red]{result.total_vulnerabilities} vulnerabilities found[/bold red]"
+        )
 
         counts = []
         if result.critical_count:
@@ -133,7 +135,9 @@ class CliFormatter(OutputFormatter):
                 pkg.name,
                 pkg.current_version or "?",
                 f"[{severity_style}]{vuln.severity.value.upper()}[/{severity_style}]",
-                f"{vuln.id}\n[dim]{vuln.title[:50]}...[/dim]" if len(vuln.title) > 50 else f"{vuln.id}\n[dim]{vuln.title}[/dim]",
+                f"{vuln.id}\n[dim]{vuln.title[:50]}...[/dim]"
+                if len(vuln.title) > 50
+                else f"{vuln.id}\n[dim]{vuln.title}[/dim]",
             )
 
         self.console.print(table)
@@ -198,7 +202,9 @@ class CliFormatter(OutputFormatter):
 
         # Show violations
         if result.violations:
-            self.console.print(f"\n[bold red]{len(result.violations)} license violations:[/bold red]")
+            self.console.print(
+                f"\n[bold red]{len(result.violations)} license violations:[/bold red]"
+            )
             for pkg, reason in result.violations:
                 self.console.print(f"  [red]- {pkg.name}: {reason}[/red]")
 
