@@ -17,6 +17,8 @@
 - **SBOM Generation**: CycloneDX 1.6 and SPDX 3.0 formats
 - **Monorepo Support**: Auto-detect workspaces across all ecosystems
 - **Development Tools Checking**: Check if Node, Python, Rust, Dart, Flutter, uv, etc. are up to date
+- **Interactive Guide**: TUI dashboard with real-time health monitoring, wizard mode, and AI chat
+- **Deprecation Detection**: Scan and auto-fix deprecated API usage (Flutter/Dart)
 - **AI-Powered Suggestions**: Claude Code integration for intelligent upgrade strategies
 - **Beautiful CLI**: Rich output with tables, progress bars, and colors
 - **Plugin Architecture**: Extensible via Python entry points
@@ -59,6 +61,12 @@ depswiz tools
 
 # Get AI-powered upgrade suggestions (requires Claude Code)
 depswiz suggest
+
+# Launch interactive dashboard
+depswiz guide
+
+# Scan for deprecated APIs (Flutter/Dart)
+depswiz deprecations
 ```
 
 ## Commands
@@ -144,6 +152,47 @@ depswiz suggest --focus toolchain  # Analyze development tools
 ```
 
 **Note:** Requires [Claude Code CLI](https://claude.ai/code) to be installed.
+
+### `depswiz guide`
+
+Interactive dependency management dashboard with three modes.
+
+```bash
+depswiz guide                      # Launch TUI dashboard
+depswiz guide --mode wizard        # Step-by-step guided wizard
+depswiz guide --mode chat          # Conversational mode with AI
+depswiz guide --watch              # Auto-refresh on file changes
+depswiz guide --skip-ai            # Disable AI features
+```
+
+**Dashboard Features:**
+- Real-time health score (0-100)
+- Vulnerability severity breakdown
+- Outdated packages by update type
+- License compliance status
+- Development tools version check
+
+**Keyboard Shortcuts:** `a`=Audit, `u`=Updates, `l`=Licenses, `t`=Tools, `c`=Chat, `s`=AI Suggestions, `q`=Quit
+
+### `depswiz deprecations`
+
+Detect and fix deprecated API usage in Flutter/Dart projects.
+
+```bash
+depswiz deprecations               # Scan for deprecations
+depswiz deprecations --fix         # Auto-fix using dart fix
+depswiz deprecations --dry-run     # Preview fixes without applying
+depswiz deprecations --fixable-only  # Show only auto-fixable issues
+depswiz deprecations --package flutter  # Filter by package
+depswiz deprecations --format json  # JSON output for CI
+depswiz deprecations --fail-on breaking  # Exit 1 for breaking deprecations
+```
+
+**Supported Detection:**
+- `deprecated_member_use` - Standard deprecation warnings
+- `deprecated_member_use_from_same_package` - Internal deprecations
+- Automatic replacement suggestions extraction
+- Source package identification
 
 ## Configuration
 
@@ -286,4 +335,5 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 - [OSV](https://osv.dev/) for vulnerability data
 - [CycloneDX](https://cyclonedx.org/) and [SPDX](https://spdx.dev/) for SBOM standards
-- [Rich](https://github.com/Textualize/rich) and [Typer](https://typer.tiangolo.com/) for beautiful CLI
+- [Rich](https://github.com/Textualize/rich), [Typer](https://typer.tiangolo.com/), and [Textual](https://textual.textualize.io/) for beautiful CLI and TUI
+- [InquirerPy](https://github.com/kazhala/InquirerPy) for interactive prompts

@@ -28,6 +28,18 @@
 
     Verify your development tools (Node, Python, Rust, etc.) are up to date
 
+-   :material-monitor-dashboard: **Interactive Guide**
+
+    ---
+
+    TUI dashboard with real-time health monitoring, step-by-step wizard, and AI-powered chat
+
+-   :material-alert-decagram: **Deprecation Detection**
+
+    ---
+
+    Find and auto-fix deprecated APIs in Flutter/Dart projects using `dart analyze` and `dart fix`
+
 </div>
 
 ## Quick Install
@@ -66,6 +78,12 @@ depswiz tools
 
 # Get AI-powered suggestions (requires Claude Code)
 depswiz suggest
+
+# Launch interactive dashboard
+depswiz guide
+
+# Scan for deprecated APIs (Flutter/Dart)
+depswiz deprecations
 ```
 
 ## Features

@@ -13,6 +13,8 @@ depswiz provides a comprehensive set of commands for dependency management acros
 | [update](update.md) | Update dependencies interactively |
 | [tools](tools.md) | Check development tools for updates |
 | [suggest](suggest.md) | Get AI-powered upgrade suggestions |
+| [guide](guide.md) | Interactive TUI dashboard with wizard and chat |
+| [deprecations](deprecations.md) | Detect and fix deprecated API usage |
 
 ## Global Options
 

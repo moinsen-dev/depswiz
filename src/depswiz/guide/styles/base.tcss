@@ -1,0 +1,67 @@
+/* Base styles for the depswiz guide TUI */
+
+Screen {
+    background: $surface;
+}
+
+#health-container {
+    border: solid $success;
+    padding: 1;
+    height: 100%;
+}
+
+#vulns-container {
+    border: solid $error;
+    padding: 1;
+}
+
+#updates-container {
+    border: solid $warning;
+    padding: 1;
+}
+
+#licenses-container {
+    border: solid $primary;
+    padding: 1;
+}
+
+#tools-container {
+    border: solid $secondary;
+    padding: 1;
+}
+
+.panel-title {
+    text-style: bold;
+    color: $text;
+    margin-bottom: 1;
+}
+
+.score-display {
+    text-align: center;
+    height: 100%;
+    content-align: center middle;
+}
+
+.status-good {
+    color: $success;
+}
+
+.status-warning {
+    color: $warning;
+}
+
+.status-error {
+    color: $error;
+}
+
+#status-bar {
+    dock: bottom;
+    height: 1;
+    background: $surface-darken-1;
+    padding: 0 1;
+}
+
+.scanning {
+    text-style: italic;
+    color: $text-muted;
+}

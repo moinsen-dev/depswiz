@@ -192,3 +192,237 @@ def get_agent_prompt() -> str:
         The agent prompt template string
     """
     return AI_AGENT_PROMPT
+
+
+# Deprecation Fix Prompts
+DEPRECATION_FIX_PROMPT = """
+# Flutter/Dart Deprecation Fix Task
+
+You are an AI coding agent tasked with fixing deprecated API usage in this Flutter/Dart project.
+
+## Deprecations Found
+
+{deprecation_list}
+
+## Your Task
+
+For each deprecation above:
+
+1. **Understand the Context**: Read the file and understand how the deprecated API is being used
+2. **Research the Replacement**: Look up the recommended replacement API in Flutter/Dart docs
+3. **Apply the Fix**: Modify the code to use the new API
+4. **Preserve Behavior**: Ensure the fix maintains the same functionality
+5. **Handle Edge Cases**: Check for any type changes or parameter differences
+
+## Common Flutter Deprecation Patterns
+
+### Widget Replacements
+- `FlatButton` → `TextButton`
+- `RaisedButton` → `ElevatedButton`
+- `OutlineButton` → `OutlinedButton`
+- `ButtonTheme` → `ButtonStyle` + specific button themes
+- `Scaffold.of(context).showSnackBar` → `ScaffoldMessenger.of(context).showSnackBar`
+
+### State Management
+- `MaterialState` → `WidgetState`
+- `MaterialStateProperty` → `WidgetStateProperty`
+
+### Text & Styling
+- `TextStyle.headline1` (etc.) → Use `Theme.of(context).textTheme.displayLarge`
+- `accentColor` → `colorScheme.secondary`
+- `primaryColorBrightness` → Use `colorScheme.brightness`
+
+### Navigation
+- `Navigator.of(context).pushNamed` parameters changed
+- `WillPopScope` → `PopScope` with `canPop` parameter
+
+### Layout
+- `RenderObjectElement.insertChildRenderObject` signature changes
+- `Scrollbar` thumb visibility parameters
+
+## Execution Steps
+
+1. **Read each affected file** to understand the full context
+2. **Apply fixes one file at a time** to maintain consistency
+3. **Run `dart analyze`** after each fix to verify no new issues
+4. **Run `flutter test`** if tests exist to ensure nothing breaks
+
+## Output Requirements
+
+For each fix applied, provide:
+- File path and line numbers affected
+- Before/after code snippet
+- Explanation of why this replacement is correct
+- Any caveats or additional changes needed
+
+If a deprecation cannot be automatically fixed (requires architectural changes), explain why and provide guidance.
+
+Begin by analyzing the deprecations and planning your fixes.
+"""
+
+DEPRECATION_SINGLE_FIX_PROMPT = """
+# Fix Specific Deprecation
+
+## Deprecation Details
+
+- **File**: {file_path}
+- **Line**: {line_number}
+- **Column**: {column}
+- **Message**: {message}
+- **Rule**: {rule_id}
+- **Suggested Replacement**: {replacement}
+
+## Context
+
+```dart
+{code_context}
+```
+
+## Your Task
+
+1. Read the file at {file_path}
+2. Find the deprecated usage at line {line_number}
+3. Replace it with the modern equivalent: {replacement}
+4. Ensure the fix compiles and maintains the same behavior
+5. Run `dart analyze {file_path}` to verify the fix
+
+## Important
+
+- Preserve all existing functionality
+- Keep the same code style as the rest of the file
+- If the replacement requires importing a new package, add the import
+- If the fix affects related code (e.g., a callback signature), update that too
+
+Apply the fix now.
+"""
+
+DEPRECATION_BATCH_FIX_PROMPT = """
+# Batch Fix Deprecations by Type
+
+## Deprecation Type: {deprecation_type}
+
+All these deprecations are of the same type and can be fixed with a consistent pattern.
+
+## Affected Locations
+
+{locations}
+
+## Replacement Pattern
+
+**Old API**: {old_api}
+**New API**: {new_api}
+**Migration Guide**: {migration_link}
+
+## Your Task
+
+1. Apply the same fix pattern across all locations
+2. Use find-and-replace where possible, but verify each change
+3. Run `dart analyze` after completing all fixes
+4. Report any locations that needed special handling
+
+## Fix Pattern
+
+```dart
+// Before
+{before_pattern}
+
+// After
+{after_pattern}
+```
+
+Apply this fix to all {count} locations.
+"""
+
+
+def get_deprecation_fix_prompt(deprecations: list[dict]) -> str:
+    """Generate prompt for fixing multiple deprecations.
+
+    Args:
+        deprecations: List of deprecation dictionaries with keys:
+            - file_path, line, column, message, rule_id, replacement
+
+    Returns:
+        Formatted prompt string for Claude
+    """
+    # Build the deprecation list
+    lines = []
+    for i, dep in enumerate(deprecations, 1):
+        lines.append(f"### {i}. {dep.get('file_path', 'Unknown')}:{dep.get('line', '?')}")
+        lines.append(f"- **Message**: {dep.get('message', 'No message')}")
+        if dep.get('replacement'):
+            lines.append(f"- **Suggested**: `{dep['replacement']}`")
+        lines.append(f"- **Rule**: `{dep.get('rule_id', 'unknown')}`")
+        lines.append("")
+
+    deprecation_list = "\n".join(lines)
+    return DEPRECATION_FIX_PROMPT.format(deprecation_list=deprecation_list)
+
+
+def get_single_deprecation_fix_prompt(
+    file_path: str,
+    line_number: int,
+    column: int,
+    message: str,
+    rule_id: str,
+    replacement: str | None,
+    code_context: str,
+) -> str:
+    """Generate prompt for fixing a single deprecation with context.
+
+    Args:
+        file_path: Path to the file
+        line_number: Line number of the deprecation
+        column: Column number
+        message: Deprecation message
+        rule_id: The analyzer rule ID
+        replacement: Suggested replacement (if known)
+        code_context: Surrounding code context
+
+    Returns:
+        Formatted prompt string for Claude
+    """
+    return DEPRECATION_SINGLE_FIX_PROMPT.format(
+        file_path=file_path,
+        line_number=line_number,
+        column=column,
+        message=message,
+        rule_id=rule_id,
+        replacement=replacement or "See migration guide",
+        code_context=code_context,
+    )
+
+
+def get_batch_deprecation_fix_prompt(
+    deprecation_type: str,
+    locations: list[str],
+    old_api: str,
+    new_api: str,
+    before_pattern: str,
+    after_pattern: str,
+    migration_link: str = "https://docs.flutter.dev/release/breaking-changes",
+) -> str:
+    """Generate prompt for batch fixing same-type deprecations.
+
+    Args:
+        deprecation_type: Type of deprecation (e.g., "FlatButton to TextButton")
+        locations: List of file:line locations
+        old_api: The deprecated API
+        new_api: The replacement API
+        before_pattern: Example code before fix
+        after_pattern: Example code after fix
+        migration_link: Link to migration guide
+
+    Returns:
+        Formatted prompt string for Claude
+    """
+    locations_text = "\n".join(f"- {loc}" for loc in locations)
+    return DEPRECATION_BATCH_FIX_PROMPT.format(
+        deprecation_type=deprecation_type,
+        locations=locations_text,
+        old_api=old_api,
+        new_api=new_api,
+        migration_link=migration_link,
+        before_pattern=before_pattern,
+        after_pattern=after_pattern,
+        count=len(locations),
+    )
