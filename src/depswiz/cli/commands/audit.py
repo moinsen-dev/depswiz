@@ -7,7 +7,8 @@ import typer
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
-from depswiz.cli.formatters import CliFormatter, HtmlFormatter, JsonFormatter, MarkdownFormatter
+from depswiz.cli.context import determine_format, is_ci_environment, parse_language_filter
+from depswiz.cli.formatters import CliFormatter, HtmlFormatter, JsonFormatter, MarkdownFormatter, SarifFormatter
 from depswiz.core.config import load_config
 from depswiz.core.models import Severity
 from depswiz.core.scanner import audit_packages, scan_dependencies
@@ -23,6 +24,7 @@ def get_formatter(format_type: str):
         "json": JsonFormatter(),
         "markdown": MarkdownFormatter(),
         "html": HtmlFormatter(),
+        "sarif": SarifFormatter(),
     }
     return formatters.get(format_type, formatters["cli"])
 
@@ -47,55 +49,57 @@ def audit(
         file_okay=False,
         dir_okay=True,
     ),
-    language: list[str] | None = typer.Option(
+    # Simplified language filter
+    only: str | None = typer.Option(
         None,
-        "--language",
-        "-l",
-        help="Filter by language (can be repeated)",
+        "--only",
+        help="Only check specific languages (comma-separated, e.g., python,docker)",
     ),
-    recursive: bool = typer.Option(
+    # Recursive is now TRUE by default, --shallow to opt-out
+    shallow: bool = typer.Option(
         False,
-        "--recursive",
-        "-r",
-        help="Scan subdirectories",
+        "--shallow",
+        help="Only scan current directory (don't recurse)",
     ),
-    workspace: bool = typer.Option(
-        False,
-        "--workspace",
-        "-w",
-        help="Detect and scan workspaces",
-    ),
+    # Severity filter
     severity: str = typer.Option(
         "low",
         "--severity",
         "-s",
         help="Minimum severity to report: low, medium, high, critical",
     ),
+    # Unified strict mode (replaces --fail-on)
+    strict: str | None = typer.Option(
+        None,
+        "--strict",
+        help="Exit with error at severity: low, medium, high, critical (auto-enabled at 'high' in CI)",
+    ),
+    # Ignore specific vulnerabilities
     ignore: list[str] | None = typer.Option(
         None,
         "--ignore",
         help="Ignore specific vulnerability ID (can be repeated)",
     ),
-    ignore_file: Path | None = typer.Option(
-        None,
-        "--ignore-file",
-        help="File with vulnerability IDs to ignore",
-    ),
-    fail_on: str = typer.Option(
-        "high",
-        "--fail-on",
-        help="Exit with error at severity level: low, medium, high, critical",
-    ),
-    fix: bool = typer.Option(
+    # Format shortcuts
+    json_output: bool = typer.Option(
         False,
-        "--fix",
-        help="Suggest fixes where available",
+        "--json",
+        help="Output as JSON",
     ),
-    format_type: str = typer.Option(
-        "cli",
-        "--format",
-        "-f",
-        help="Output format: cli, json, markdown, html",
+    md_output: bool = typer.Option(
+        False,
+        "--md",
+        help="Output as Markdown",
+    ),
+    html_output: bool = typer.Option(
+        False,
+        "--html",
+        help="Output as HTML",
+    ),
+    sarif_output: bool = typer.Option(
+        False,
+        "--sarif",
+        help="Output as SARIF (for GitHub Code Scanning, VS Code)",
     ),
     output: Path | None = typer.Option(
         None,
@@ -104,26 +108,52 @@ def audit(
         help="Write output to file",
     ),
 ) -> None:
-    """Scan dependencies for known vulnerabilities."""
+    """Scan dependencies for known vulnerabilities.
+
+    By default, scans the entire project recursively and reports all severities.
+
+    Examples:
+        depswiz audit                     # Audit everything
+        depswiz audit --severity high     # Only high/critical
+        depswiz audit --strict            # Fail on high+ (default in CI)
+        depswiz audit --json -o audit.json
+    """
     # Load configuration
     config_path = ctx.obj.get("config_path") if ctx.obj else None
     config = load_config(config_path, path)
 
+    # Determine if we're in CI - affects defaults
+    in_ci = is_ci_environment()
+
+    # Recursive is TRUE by default now
+    recursive = not shallow
+
+    # Parse language filter
+    languages = parse_language_filter(only)
+
+    # Determine format (with CI auto-detection)
+    format_type = determine_format(json_output, md_output, html_output, sarif_output)
+    if in_ci and format_type == "cli" and not any([json_output, md_output, html_output, sarif_output]):
+        format_type = "json"
+
     min_severity = parse_severity(severity)
-    fail_severity = parse_severity(fail_on)
+
+    # Strict mode: explicit flag, or auto 'high' in CI
+    if strict is not None:
+        fail_severity = parse_severity(strict)
+        use_strict = True
+    elif in_ci:
+        fail_severity = Severity.HIGH
+        use_strict = True
+    else:
+        fail_severity = Severity.HIGH
+        use_strict = False
 
     # Collect ignored vulnerability IDs
     ignored_ids: set[str] = set()
     if ignore:
         ignored_ids.update(ignore)
-    if ignore_file and ignore_file.exists():
-        ignored_ids.update(
-            line.strip()
-            for line in ignore_file.read_text().splitlines()
-            if line.strip() and not line.startswith("#")
-        )
 
-    ctx.obj.get("verbose", False) if ctx.obj else False
     quiet = ctx.obj.get("quiet", False) if ctx.obj else False
 
     # Run the scan and audit
@@ -131,16 +161,16 @@ def audit(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
         console=console,
-        disable=quiet,
+        disable=quiet or format_type != "cli",
     ) as progress:
         # First scan for packages
         task = progress.add_task("Scanning dependencies...", total=None)
         check_result = asyncio.run(
             scan_dependencies(
                 path=path,
-                languages=language,
-                recursive=recursive or config.check.recursive,
-                workspace=workspace or config.check.workspace,
+                languages=languages,
+                recursive=recursive,
+                workspace=True,  # Always detect workspaces
                 include_dev=True,
                 config=config,
                 progress_callback=lambda msg: progress.update(task, description=msg),
@@ -169,11 +199,11 @@ def audit(
 
     # Format and output results
     formatter = get_formatter(format_type)
-    output_content = formatter.format_audit_result(audit_result, show_fix=fix)
+    output_content = formatter.format_audit_result(audit_result, show_fix=True)
 
     if output:
         output.write_text(output_content)
-        if not quiet:
+        if not quiet and format_type == "cli":
             console.print(f"[green]Output written to {output}[/green]")
     elif format_type == "cli":
         # CLI formatter already printed
@@ -182,9 +212,11 @@ def audit(
         console.print(output_content)
 
     # Check if we should fail
-    failing_vulns = [
-        (pkg, vuln) for pkg, vuln in audit_result.vulnerabilities if vuln.severity >= fail_severity
-    ]
-
-    if failing_vulns:
-        raise typer.Exit(code=1)
+    if use_strict:
+        failing_vulns = [
+            (pkg, vuln)
+            for pkg, vuln in audit_result.vulnerabilities
+            if vuln.severity >= fail_severity
+        ]
+        if failing_vulns:
+            raise typer.Exit(code=1)

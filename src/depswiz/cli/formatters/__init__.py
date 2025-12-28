@@ -5,6 +5,7 @@ from depswiz.cli.formatters.cli import CliFormatter
 from depswiz.cli.formatters.html import HtmlFormatter
 from depswiz.cli.formatters.json import JsonFormatter
 from depswiz.cli.formatters.markdown import MarkdownFormatter
+from depswiz.cli.formatters.sarif import SarifFormatter
 
 __all__ = [
     "CliFormatter",
@@ -12,4 +13,5 @@ __all__ = [
     "JsonFormatter",
     "MarkdownFormatter",
     "OutputFormatter",
+    "SarifFormatter",
 ]

@@ -16,6 +16,7 @@ ECOSYSTEM_MAP = {
     "rust": "crates.io",
     "dart": "Pub",
     "javascript": "npm",
+    "golang": "Go",
 }
 
 

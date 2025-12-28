@@ -7,7 +7,8 @@ import typer
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
-from depswiz.cli.formatters import CliFormatter, HtmlFormatter, JsonFormatter, MarkdownFormatter
+from depswiz.cli.context import determine_format, is_ci_environment, parse_language_filter
+from depswiz.cli.formatters import CliFormatter, HtmlFormatter, JsonFormatter, MarkdownFormatter, SarifFormatter
 from depswiz.core.config import load_config
 from depswiz.core.models import CheckResult, UpdateType
 from depswiz.core.scanner import scan_dependencies
@@ -23,6 +24,7 @@ def get_formatter(format_type: str):
         "json": JsonFormatter(),
         "markdown": MarkdownFormatter(),
         "html": HtmlFormatter(),
+        "sarif": SarifFormatter(),
     }
     return formatters.get(format_type, formatters["cli"])
 
@@ -37,50 +39,50 @@ def check(
         file_okay=False,
         dir_okay=True,
     ),
-    language: list[str] | None = typer.Option(
+    # Simplified language filter
+    only: str | None = typer.Option(
         None,
-        "--language",
-        "-l",
-        help="Filter by language (can be repeated)",
+        "--only",
+        help="Only check specific languages (comma-separated, e.g., python,docker)",
     ),
-    recursive: bool = typer.Option(
+    # Recursive is now TRUE by default, --shallow to opt-out
+    shallow: bool = typer.Option(
         False,
-        "--recursive",
-        "-r",
-        help="Scan subdirectories",
+        "--shallow",
+        help="Only scan current directory (don't recurse)",
     ),
-    workspace: bool = typer.Option(
+    # Simplified dev dependency handling
+    prod: bool = typer.Option(
         False,
-        "--workspace",
-        "-w",
-        help="Detect and scan workspaces",
+        "--prod",
+        help="Exclude development dependencies",
     ),
-    include_dev: bool = typer.Option(
-        True,
-        "--include-dev/--no-dev",
-        help="Include development dependencies",
+    # Unified strict mode
+    strict: bool | None = typer.Option(
+        None,
+        "--strict",
+        help="Exit with error if issues found (auto-enabled in CI)",
     ),
-    strategy: str = typer.Option(
-        "all",
-        "--strategy",
-        "-s",
-        help="Update strategy: all, security, patch, minor, major",
-    ),
-    warn_breaking: bool = typer.Option(
-        True,
-        "--warn-breaking/--no-warn-breaking",
-        help="Warn about breaking changes",
-    ),
-    fail_outdated: bool = typer.Option(
+    # Format shortcuts
+    json_output: bool = typer.Option(
         False,
-        "--fail-outdated",
-        help="Exit with error if outdated packages found",
+        "--json",
+        help="Output as JSON",
     ),
-    format_type: str = typer.Option(
-        "cli",
-        "--format",
-        "-f",
-        help="Output format: cli, json, markdown, html",
+    md_output: bool = typer.Option(
+        False,
+        "--md",
+        help="Output as Markdown",
+    ),
+    html_output: bool = typer.Option(
+        False,
+        "--html",
+        help="Output as HTML",
+    ),
+    sarif_output: bool = typer.Option(
+        False,
+        "--sarif",
+        help="Output as SARIF (for GitHub Code Scanning, VS Code)",
     ),
     output: Path | None = typer.Option(
         None,
@@ -88,19 +90,50 @@ def check(
         "-o",
         help="Write output to file",
     ),
+    # Strategy for filtering updates
+    strategy: str = typer.Option(
+        "all",
+        "--strategy",
+        "-s",
+        help="Update strategy: all, patch, minor, major",
+        hidden=True,  # Less commonly used, hide from main help
+    ),
 ) -> None:
-    """Check dependencies for available updates."""
+    """Check dependencies for available updates.
+
+    By default, scans the entire project recursively for all supported languages.
+
+    Examples:
+        depswiz check                    # Check everything
+        depswiz check --only python      # Only Python
+        depswiz check --shallow          # Just current directory
+        depswiz check --json -o out.json # JSON output to file
+    """
     # Load configuration
     config_path = ctx.obj.get("config_path") if ctx.obj else None
     config = load_config(config_path, path)
 
-    # Override config with CLI options
-    if recursive:
-        config.check.recursive = recursive
-    if workspace:
-        config.check.workspace = workspace
+    # Determine if we're in CI - affects defaults
+    in_ci = is_ci_environment()
 
-    ctx.obj.get("verbose", False) if ctx.obj else False
+    # Recursive is TRUE by default now
+    recursive = not shallow
+
+    # Parse language filter
+    languages = parse_language_filter(only)
+
+    # Determine format (with CI auto-detection)
+    format_type = determine_format(json_output, md_output, html_output, sarif_output)
+    if in_ci and format_type == "cli" and not any([json_output, md_output, html_output, sarif_output]):
+        # In CI, default to JSON if no format specified
+        format_type = "json"
+
+    # Strict mode: explicit flag, or auto in CI
+    use_strict = strict if strict is not None else in_ci
+
+    # Dev dependencies: include unless --prod
+    include_dev = not prod
+
     quiet = ctx.obj.get("quiet", False) if ctx.obj else False
 
     # Run the scan
@@ -108,16 +141,16 @@ def check(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
         console=console,
-        disable=quiet,
+        disable=quiet or format_type != "cli",
     ) as progress:
         task = progress.add_task("Scanning dependencies...", total=None)
 
         result = asyncio.run(
             scan_dependencies(
                 path=path,
-                languages=language,
-                recursive=config.check.recursive,
-                workspace=config.check.workspace,
+                languages=languages,
+                recursive=recursive,
+                workspace=True,  # Always detect workspaces
                 include_dev=include_dev,
                 config=config,
                 progress_callback=lambda msg: progress.update(task, description=msg),
@@ -132,11 +165,11 @@ def check(
 
     # Format and output results
     formatter = get_formatter(format_type)
-    output_content = formatter.format_check_result(result, warn_breaking=warn_breaking)
+    output_content = formatter.format_check_result(result, warn_breaking=True)
 
     if output:
         output.write_text(output_content)
-        if not quiet:
+        if not quiet and format_type == "cli":
             console.print(f"[green]Output written to {output}[/green]")
     elif format_type == "cli":
         # CLI formatter already printed
@@ -144,8 +177,8 @@ def check(
     else:
         console.print(output_content)
 
-    # Exit with error if configured and outdated packages found
-    if fail_outdated and result.outdated_packages:
+    # Exit with error if strict mode and outdated packages found
+    if use_strict and result.outdated_packages:
         raise typer.Exit(code=1)
 
 

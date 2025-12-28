@@ -1,8 +1,56 @@
 # CI/CD Integration
 
-depswiz is designed for seamless integration with CI/CD pipelines. This guide covers common patterns for GitHub Actions, GitLab CI, and other platforms.
+depswiz is designed for zero-configuration CI/CD integration. It automatically detects CI environments and adjusts its behavior accordingly.
+
+## Zero-Configuration CI
+
+When running in a CI environment, depswiz automatically:
+
+- **Enables strict mode**: Fails the build on issues (no `--strict` flag needed)
+- **Defaults to JSON output**: Machine-readable output by default
+- **Scans recursively**: Checks your entire project tree
+
+### Detected CI Platforms
+
+depswiz auto-detects 13 CI platforms:
+
+| Platform | Environment Variable |
+|----------|---------------------|
+| GitHub Actions | `GITHUB_ACTIONS` |
+| GitLab CI | `GITLAB_CI` |
+| CircleCI | `CIRCLECI` |
+| Travis CI | `TRAVIS` |
+| Jenkins | `JENKINS_HOME` |
+| Azure Pipelines | `TF_BUILD` |
+| Bitbucket Pipelines | `BITBUCKET_PIPELINE` |
+| TeamCity | `TEAMCITY_VERSION` |
+| Buildkite | `BUILDKITE` |
+| Drone | `DRONE` |
+| Woodpecker | `CI=woodpecker` |
+| Codeship | `CI_NAME=codeship` |
+| Semaphore | `SEMAPHORE` |
 
 ## GitHub Actions
+
+### Simple One-Liner
+
+```yaml
+# .github/workflows/security.yml
+name: Security Check
+
+on: [push, pull_request]
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: pip install depswiz
+      - run: depswiz  # That's it! Comprehensive scan with auto-strict mode
+```
 
 ### Security Audit
 
@@ -31,7 +79,7 @@ jobs:
         run: uv tool install depswiz
 
       - name: Security Audit
-        run: depswiz audit --fail-on high --format json > audit-results.json
+        run: depswiz audit --json -o audit-results.json
 
       - name: Upload Results
         uses: actions/upload-artifact@v4
@@ -55,6 +103,7 @@ on:
       - 'Cargo.toml'
       - 'package.json'
       - 'pubspec.yaml'
+      - 'Dockerfile'
 
 jobs:
   check:
@@ -66,7 +115,7 @@ jobs:
         run: pip install depswiz
 
       - name: Check Dependencies
-        run: depswiz check --format markdown >> $GITHUB_STEP_SUMMARY
+        run: depswiz check --md >> $GITHUB_STEP_SUMMARY
 ```
 
 ### License Compliance
@@ -90,11 +139,7 @@ jobs:
         run: pip install depswiz
 
       - name: License Check
-        run: |
-          depswiz licenses \
-            --deny GPL-3.0 \
-            --deny AGPL-3.0 \
-            --fail-on-unknown
+        run: depswiz licenses --deny GPL-3.0 --deny AGPL-3.0
 ```
 
 ### SBOM Generation
@@ -120,8 +165,8 @@ jobs:
 
       - name: Generate SBOM
         run: |
-          depswiz sbom --format cyclonedx -o sbom.json
-          depswiz sbom --format spdx -o sbom.spdx.json
+          depswiz sbom -o sbom.json
+          depswiz sbom --spdx -o sbom.spdx.json
 
       - name: Upload to Release
         uses: softprops/action-gh-release@v1
@@ -153,15 +198,8 @@ jobs:
       - name: Install depswiz
         run: pip install depswiz
 
-      - name: Check for Updates
-        run: depswiz check --format json > check-results.json
-        continue-on-error: true
-
-      - name: Security Audit
-        run: depswiz audit --fail-on high
-
-      - name: License Compliance
-        run: depswiz licenses --deny GPL-3.0
+      - name: Comprehensive Scan
+        run: depswiz --json -o comprehensive.json
 
       - name: Generate SBOM
         run: depswiz sbom -o sbom.json
@@ -171,7 +209,7 @@ jobs:
         with:
           name: depswiz-results
           path: |
-            check-results.json
+            comprehensive.json
             sbom.json
 ```
 
@@ -188,7 +226,7 @@ security-audit:
   image: python:3.13
   script:
     - pip install depswiz
-    - depswiz audit --fail-on high --format json > audit.json
+    - depswiz audit --json -o audit.json
   artifacts:
     paths:
       - audit.json
@@ -200,7 +238,7 @@ license-check:
   image: python:3.13
   script:
     - pip install depswiz
-    - depswiz licenses --deny GPL-3.0 --format json > licenses.json
+    - depswiz licenses --deny GPL-3.0 --json -o licenses.json
   artifacts:
     paths:
       - licenses.json
@@ -234,8 +272,8 @@ steps:
   - script: pip install depswiz
     displayName: 'Install depswiz'
 
-  - script: depswiz audit --fail-on high
-    displayName: 'Security Audit'
+  - script: depswiz
+    displayName: 'Comprehensive Scan'
 
   - script: depswiz sbom -o $(Build.ArtifactStagingDirectory)/sbom.json
     displayName: 'Generate SBOM'
@@ -260,15 +298,9 @@ pipeline {
             }
         }
 
-        stage('Security Audit') {
+        stage('Comprehensive Scan') {
             steps {
-                sh 'depswiz audit --fail-on high'
-            }
-        }
-
-        stage('License Check') {
-            steps {
-                sh 'depswiz licenses --deny GPL-3.0'
+                sh 'depswiz'
             }
         }
 
@@ -284,34 +316,41 @@ pipeline {
 
 ## Output Formats for CI
 
-### JSON Output
-
-Best for programmatic parsing:
+### Simplified Flags
 
 ```bash
-depswiz check --format json
-depswiz audit --format json
+# JSON output
+depswiz check --json
+
+# Markdown for reports
+depswiz audit --md
+
+# HTML for archiving
+depswiz licenses --html -o report.html
 ```
 
 ### Exit Codes
 
 | Code | Meaning |
 |------|---------|
-| 0 | Success, no issues |
-| 1 | Issues found (vulnerabilities, policy violations) |
+| 0 | Success - no issues found |
+| 1 | Issues found (with `--strict` or auto-enabled in CI) |
 | 2 | Configuration or input error |
 
-Use `--fail-*` flags to control when to fail:
+Use `--strict` to explicitly fail on issues:
 
 ```bash
+# Fail on any issues
+depswiz --strict
+
 # Fail on high+ severity vulnerabilities
-depswiz audit --fail-on high
+depswiz audit --strict
 
-# Fail if any outdated packages
-depswiz check --fail-outdated
+# Fail on critical only
+depswiz audit --strict critical
 
-# Fail on unknown licenses
-depswiz licenses --fail-on-unknown
+# Fail on license violations
+depswiz licenses --strict
 ```
 
 ## Pre-commit Hook
@@ -324,10 +363,10 @@ repos:
     hooks:
       - id: depswiz-audit
         name: Security Audit
-        entry: depswiz audit --fail-on critical
+        entry: depswiz audit --strict critical
         language: system
         pass_filenames: false
-        files: ^(pyproject\.toml|requirements\.txt|Cargo\.toml|package\.json)$
+        files: ^(pyproject\.toml|requirements\.txt|Cargo\.toml|package\.json|Dockerfile)$
 ```
 
 ## Scheduled Checks
@@ -350,7 +389,7 @@ Speed up CI runs by caching:
   uses: actions/cache@v4
   with:
     path: ~/.cache/depswiz
-    key: depswiz-${{ hashFiles('**/pyproject.toml', '**/Cargo.toml', '**/package.json') }}
+    key: depswiz-${{ hashFiles('**/pyproject.toml', '**/Cargo.toml', '**/package.json', '**/Dockerfile') }}
 ```
 
 ## Notifications

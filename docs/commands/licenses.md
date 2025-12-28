@@ -5,32 +5,32 @@ Check license compliance and generate license reports for your dependencies.
 ## Usage
 
 ```bash
-depswiz licenses [OPTIONS] [PATH]
+depswiz licenses [OPTIONS]
 ```
-
-## Arguments
-
-| Argument | Description | Default |
-|----------|-------------|---------|
-| `PATH` | Project directory to check | Current directory |
 
 ## Options
 
 | Option | Description |
 |--------|-------------|
-| `-l`, `--language` | Filter by language |
+| `--json` | Output as JSON |
+| `--md` | Output as Markdown |
+| `--html` | Output as HTML |
+| `--sarif` | Output as SARIF 2.1 (GitHub Code Scanning, VS Code) |
+| `-o`, `--output FILE` | Write output to file |
+| `--strict` | Exit with code 1 if license violations found |
+| `--only LANGS` | Filter by language(s), comma-separated |
+| `--shallow` | Scan current directory only (default: recursive) |
 | `--summary` | Show license distribution summary only |
-| `--deny` | Deny specific license (can be used multiple times) |
-| `--allow` | Allow only specific licenses |
-| `--fail-on-unknown` | Exit with code 1 if unknown licenses found |
-| `-f`, `--format` | Output format: cli, json, markdown, html |
+| `--deny LICENSE` | Deny specific license (can be used multiple times) |
+| `--allow LICENSE` | Allow only specific licenses |
+| `-p`, `--path PATH` | Project directory to check (default: current directory) |
 
 ## Examples
 
 ### Basic Usage
 
 ```bash
-# List all licenses
+# List all licenses (recursive by default)
 depswiz licenses
 
 # Show summary only
@@ -45,19 +45,34 @@ depswiz licenses --deny GPL-3.0 --deny AGPL-3.0
 
 # Allow only permissive licenses
 depswiz licenses --allow MIT --allow Apache-2.0 --allow BSD-3-Clause
-
-# Fail on unknown licenses (for compliance)
-depswiz licenses --fail-on-unknown
 ```
 
 ### CI/CD Integration
 
 ```bash
 # Strict license compliance check
-depswiz licenses --deny GPL-3.0 --deny AGPL-3.0 --fail-on-unknown
+depswiz licenses --strict
+
+# Deny specific licenses with strict mode
+depswiz licenses --strict --deny GPL-3.0 --deny AGPL-3.0
 
 # Generate license report
-depswiz licenses --format markdown > LICENSES.md
+depswiz licenses --md -o LICENSES.md
+```
+
+In CI environments, `--strict` is automatically enabled.
+
+### Scanning Options
+
+```bash
+# Recursive scan (default)
+depswiz licenses
+
+# Current directory only
+depswiz licenses --shallow
+
+# Filter by language
+depswiz licenses --only python,rust
 ```
 
 ## Output
@@ -65,7 +80,7 @@ depswiz licenses --format markdown > LICENSES.md
 ### CLI Format (Default)
 
 ```
-depswiz v0.2.0 - License Check
+depswiz v0.5.0 - License Check
 
 ┏━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━┓
 ┃ Package         ┃ Version        ┃ License             ┃

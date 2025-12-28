@@ -5,59 +5,61 @@ Check dependencies for available updates across all supported languages.
 ## Usage
 
 ```bash
-depswiz check [OPTIONS] [PATH]
+depswiz check [OPTIONS]
 ```
-
-## Arguments
-
-| Argument | Description | Default |
-|----------|-------------|---------|
-| `PATH` | Project directory to check | Current directory |
 
 ## Options
 
 | Option | Description |
 |--------|-------------|
-| `-l`, `--language` | Filter by language (can be used multiple times) |
-| `-w`, `--workspace` | Check all workspace members |
-| `-r`, `--recursive` | Recursively check subdirectories |
+| `--json` | Output as JSON |
+| `--md` | Output as Markdown |
+| `--html` | Output as HTML |
+| `--sarif` | Output as SARIF 2.1 (GitHub Code Scanning, VS Code) |
+| `-o`, `--output FILE` | Write output to file |
+| `--strict` | Exit with code 1 if outdated packages found |
+| `--only LANGS` | Filter by language(s), comma-separated (e.g., `python,rust,golang`) |
+| `--shallow` | Scan current directory only (default: recursive) |
+| `--prod` | Exclude development dependencies |
 | `--strategy` | Update strategy: all, security, patch, minor, major |
-| `--fail-outdated` | Exit with code 1 if outdated packages found |
-| `-f`, `--format` | Output format: cli, json, markdown, html |
+| `-p`, `--path PATH` | Project directory to check (default: current directory) |
 
 ## Examples
 
 ### Basic Usage
 
 ```bash
-# Check current directory
+# Check current directory (recursive by default)
 depswiz check
 
 # Check specific directory
-depswiz check /path/to/project
+depswiz check -p /path/to/project
 ```
 
 ### Filter by Language
 
 ```bash
 # Only check Python
-depswiz check -l python
+depswiz check --only python
 
 # Check Python and Rust
-depswiz check -l python -l rust
+depswiz check --only python,rust
 
 # Check JavaScript/TypeScript
-depswiz check -l javascript
+depswiz check --only javascript
 ```
 
-### Workspace Mode
+### Output Formats
 
 ```bash
-# Check all workspace members
-depswiz check --workspace
+# JSON output
+depswiz check --json
 
-# Combine with language filter
-depswiz check --workspace -l rust
+# Save to file
+depswiz check --json -o outdated.json
+
+# Markdown for documentation
+depswiz check --md -o DEPENDENCIES.md
 ```
 
 ### Update Strategies
@@ -80,13 +82,28 @@ depswiz check --strategy minor
 
 ```bash
 # Fail if any outdated packages
-depswiz check --fail-outdated
+depswiz check --strict
 
 # JSON output for parsing
-depswiz check --format json
+depswiz check --json
 
 # Combine both
-depswiz check --fail-outdated --format json
+depswiz check --strict --json
+```
+
+In CI environments, `--strict` is automatically enabled.
+
+### Scanning Options
+
+```bash
+# Recursive scan (default)
+depswiz check
+
+# Current directory only
+depswiz check --shallow
+
+# Exclude dev dependencies
+depswiz check --prod
 ```
 
 ## Output
@@ -94,7 +111,7 @@ depswiz check --fail-outdated --format json
 ### CLI Format (Default)
 
 ```
-depswiz v0.2.0 - Dependency Check
+depswiz v0.5.0 - Dependency Check
 
 Detected: Python (pyproject.toml)
 
@@ -138,6 +155,8 @@ Detected: Python (pyproject.toml)
 | Rust | Cargo.toml | Cargo.lock |
 | Dart/Flutter | pubspec.yaml | pubspec.lock |
 | JavaScript/TypeScript | package.json | package-lock.json, yarn.lock |
+| Go | go.mod | go.sum |
+| Docker | Dockerfile, docker-compose.yml | - |
 
 ## See Also
 

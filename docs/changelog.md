@@ -7,10 +7,80 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2025-12-28
+
 ### Added
-- GitHub Pages documentation site
-- Comprehensive command reference documentation
-- Language-specific guides for Python, Rust, Dart, and JavaScript
+
+- **Go Language Support**
+  - New Go/Golang plugin for go.mod and go.sum parsing
+  - Go Module Proxy integration for version checking
+  - Workspace support via go.work files
+  - Vulnerability scanning via OSV and GHSA (Go ecosystem)
+
+- **SARIF Output Format**
+  - New `--sarif` output flag for all check, audit, and licenses commands
+  - SARIF 2.1.0 compliant output for GitHub Code Scanning integration
+  - VS Code SARIF Viewer support
+  - Includes vulnerability severity mapping, CWE references, and fix suggestions
+
+- **NVD Vulnerability Source**
+  - National Vulnerability Database (NVD) integration
+  - CVSS 3.1/3.0/2.0 score support
+  - Optional API key for higher rate limits (NVD_API_KEY env var)
+  - Configure via `sources = ["osv", "ghsa", "rustsec", "nvd"]` in config
+
+### Changed
+
+- Updated language support to 6 ecosystems (added Go)
+- Expanded vulnerability sources to 4 (added NVD)
+- Expanded output formats to 7 (added SARIF)
+
+## [0.4.1] - 2025-12-28
+
+### Added
+
+- **Comprehensive Scan Mode**
+  - Run `depswiz` with no arguments to check everything at once
+  - Combines dependency check, vulnerability audit, and license compliance
+  - Unified output with summary counts and top issues
+
+- **Docker Plugin**
+  - Scan Dockerfiles for outdated base images
+  - Docker Compose support for multi-container projects
+  - Registry integration for version checking
+
+- **Smart CI Detection**
+  - Auto-detects 13 CI platforms (GitHub Actions, GitLab CI, CircleCI, etc.)
+  - Automatically enables `--strict` mode in CI environments
+  - Auto-defaults to JSON output when no format specified in CI
+
+### Changed
+
+- **Recursive Scanning by Default**
+  - All commands now recursively scan subdirectories by default
+  - Use `--shallow` flag to scan only the current directory
+
+- **Simplified Output Flags**
+  - New: `--json`, `--md`, `--html` (replaces `--format <type>`)
+  - More intuitive and faster to type
+
+- **Unified Strict Mode**
+  - New: `--strict` flag across all commands (replaces `--fail-outdated`, `--fail-on`)
+  - For audit: `--strict [LEVEL]` where LEVEL is critical/high/medium/low
+  - Consistent exit code behavior across all commands
+
+- **Unified Language Filtering**
+  - New: `--only python,rust,docker` (replaces `-l python -l rust`)
+  - Comma-separated list for multiple languages
+  - Now supports `docker` as a language filter
+
+### Deprecated
+
+- `--format` option (use `--json`, `--md`, `--html` instead)
+- `--fail-outdated` option (use `--strict` instead)
+- `--fail-on` option (use `--strict [LEVEL]` instead)
+- `-l`/`--language` option (use `--only` instead)
+- `--recursive` option (now default, use `--shallow` to disable)
 
 ## [0.4.0] - 2025-12-27
 
@@ -144,7 +214,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Auto-detect workspaces per ecosystem
   - Aggregated reporting
 
-[Unreleased]: https://github.com/moinsen-dev/depswiz/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/moinsen-dev/depswiz/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/moinsen-dev/depswiz/compare/v0.4.1...v0.5.0
+[0.4.1]: https://github.com/moinsen-dev/depswiz/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/moinsen-dev/depswiz/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/moinsen-dev/depswiz/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/moinsen-dev/depswiz/compare/v0.1.0...v0.2.0

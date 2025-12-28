@@ -68,7 +68,7 @@ class TestCheckCommand:
         """Test check command with JSON output format."""
         mock_scan.return_value = mock_check_result
 
-        result = runner.invoke(app, ["check", "--format", "json", str(tmp_path)])
+        result = runner.invoke(app, ["check", "--json", str(tmp_path)])
         assert result.exit_code == 0
         assert '"packages"' in result.stdout
         assert '"requests"' in result.stdout
@@ -80,23 +80,23 @@ class TestCheckCommand:
         """Test check command with Markdown output format."""
         mock_scan.return_value = mock_check_result
 
-        result = runner.invoke(app, ["check", "--format", "markdown", str(tmp_path)])
+        result = runner.invoke(app, ["check", "--md", str(tmp_path)])
         assert result.exit_code == 0
         assert "# Dependency Report" in result.stdout
 
     @patch("depswiz.cli.commands.check.scan_dependencies", new_callable=AsyncMock)
-    def test_check_fail_outdated_with_outdated(
+    def test_check_strict_with_outdated(
         self, mock_scan: AsyncMock, mock_check_result: CheckResult, tmp_path: Path
     ) -> None:
-        """Test check command fails when --fail-outdated and packages are outdated."""
+        """Test check command fails when --strict and packages are outdated."""
         mock_scan.return_value = mock_check_result
 
-        result = runner.invoke(app, ["check", "--fail-outdated", str(tmp_path)])
+        result = runner.invoke(app, ["check", "--strict", str(tmp_path)])
         # Should fail because requests is outdated
         assert result.exit_code == 1
 
     @patch("depswiz.cli.commands.check.scan_dependencies", new_callable=AsyncMock)
-    def test_check_fail_outdated_when_up_to_date(
+    def test_check_strict_when_up_to_date(
         self, mock_scan: AsyncMock, tmp_path: Path
     ) -> None:
         """Test check command succeeds when all packages are up to date."""
@@ -116,7 +116,7 @@ class TestCheckCommand:
         )
         mock_scan.return_value = up_to_date_result
 
-        result = runner.invoke(app, ["check", "--fail-outdated", str(tmp_path)])
+        result = runner.invoke(app, ["check", "--strict", str(tmp_path)])
         assert result.exit_code == 0
 
     @patch("depswiz.cli.commands.check.scan_dependencies", new_callable=AsyncMock)
@@ -152,7 +152,7 @@ class TestCheckOutputFile:
         output_file = tmp_path / "output.json"
 
         result = runner.invoke(
-            app, ["check", "--format", "json", "--output", str(output_file), str(tmp_path)]
+            app, ["check", "--json", "--output", str(output_file), str(tmp_path)]
         )
         assert result.exit_code == 0
         assert output_file.exists()
@@ -194,7 +194,7 @@ class TestCheckStrategy:
         mock_scan.return_value = result_with_major
 
         result = runner.invoke(
-            app, ["check", "--strategy", "patch", "--format", "json", str(tmp_path)]
+            app, ["check", "--strategy", "patch", "--json", str(tmp_path)]
         )
         assert result.exit_code == 0
         # Only patch updates should be shown
@@ -233,7 +233,7 @@ class TestCheckStrategy:
         mock_scan.return_value = result_with_updates
 
         result = runner.invoke(
-            app, ["check", "--strategy", "minor", "--format", "json", str(tmp_path)]
+            app, ["check", "--strategy", "minor", "--json", str(tmp_path)]
         )
         assert result.exit_code == 0
         # Minor update should be shown

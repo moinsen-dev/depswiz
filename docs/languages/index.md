@@ -10,6 +10,8 @@ depswiz supports dependency management for multiple programming languages throug
 | [Rust](rust.md) | Built-in | Stable |
 | [Dart/Flutter](dart.md) | Built-in | Stable |
 | [JavaScript/TypeScript](javascript.md) | Built-in | Stable |
+| [Go](golang.md) | Built-in | Stable |
+| [Docker](docker.md) | Built-in | Stable |
 
 ## Language Detection
 
@@ -21,17 +23,22 @@ depswiz automatically detects languages based on manifest files:
 | Rust | `Cargo.toml` |
 | Dart/Flutter | `pubspec.yaml` |
 | JavaScript/TypeScript | `package.json` |
+| Go | `go.mod` |
+| Docker | `Dockerfile`, `docker-compose.yml`, `docker-compose.yaml` |
 
 ## Multi-Language Projects
 
 depswiz handles projects with multiple languages seamlessly:
 
 ```bash
-# Check all detected languages
+# Check all detected languages (recursive by default)
 depswiz check
 
 # Filter to specific languages
-depswiz check -l python -l rust
+depswiz check --only python,rust
+
+# Include Docker image scanning
+depswiz check --only python,docker
 ```
 
 ## Workspace Support
@@ -44,11 +51,13 @@ Each language plugin understands its ecosystem's workspace conventions:
 | Rust | Cargo workspaces (`[workspace]` in Cargo.toml) |
 | Dart/Flutter | Melos workspaces |
 | JavaScript | npm/yarn/pnpm workspaces |
+| Go | go.work files |
+| Docker | Multi-container Docker Compose files |
 
-Enable workspace scanning:
+Recursive scanning is enabled by default. To scan only the current directory:
 
 ```bash
-depswiz check --workspace
+depswiz check --shallow
 ```
 
 ## Version Comparison
@@ -71,6 +80,8 @@ Each plugin queries its ecosystem's package registry:
 | Rust | crates.io | `https://crates.io/api/v1/crates/{package}` |
 | Dart | pub.dev | `https://pub.dev/api/packages/{package}` |
 | JavaScript | npm | `https://registry.npmjs.org/{package}` |
+| Go | Go Module Proxy | `https://proxy.golang.org/{module}/@latest` |
+| Docker | Docker Hub | `https://hub.docker.com/v2/repositories/{image}/tags` |
 
 ## Adding Language Support
 
@@ -82,5 +93,5 @@ Enable or disable specific languages in `depswiz.toml`:
 
 ```toml
 [languages]
-enabled = ["python", "rust"]  # Only check these languages
+enabled = ["python", "rust", "golang", "docker"]  # Only check these languages
 ```

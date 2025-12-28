@@ -24,7 +24,7 @@ depswiz tools [OPTIONS] [PATH]
 | `--list` | List all supported tools |
 | `--upgrade` | Use Claude Code to perform intelligent upgrades |
 | `--timeout` | Timeout in seconds (default: 300) |
-| `-f`, `--format` | Output format: cli, json |
+| `--json` | Output as JSON |
 
 ## Supported Tools
 
@@ -98,10 +98,10 @@ This invokes Claude Code to:
 
 ```bash
 # JSON output for parsing
-depswiz tools --format json
+depswiz tools --json
 
 # Check for updates in CI
-depswiz tools --updates-only --format json
+depswiz tools --updates-only --json
 ```
 
 ## Output
@@ -109,7 +109,7 @@ depswiz tools --updates-only --format json
 ### CLI Format (Default)
 
 ```
-depswiz v0.2.0 - Development Tools Check
+depswiz v0.5.0 - Development Tools Check
 
 Platform: macos
 

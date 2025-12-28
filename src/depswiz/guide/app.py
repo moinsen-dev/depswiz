@@ -19,6 +19,7 @@ from depswiz.guide.screens import (
     LicensesScreen,
     ToolsScreen,
     UpdatesScreen,
+    WelcomeScreen,
 )
 
 if TYPE_CHECKING:
@@ -469,8 +470,5 @@ class GuideApp(App):
         self.push_screen(AIScreen(self.state, self.context_manager))
 
     def action_show_help(self) -> None:
-        """Show help screen."""
-        self.notify(
-            "r=Refresh, a=Audit, u=Updates, l=Licenses, t=Tools, c=Chat, s=AI, q=Quit",
-            severity="information",
-        )
+        """Show welcome/help screen."""
+        self.push_screen(WelcomeScreen())

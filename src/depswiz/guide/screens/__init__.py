@@ -6,6 +6,7 @@ from depswiz.guide.screens.chat_screen import ChatScreen
 from depswiz.guide.screens.licenses_screen import LicensesScreen
 from depswiz.guide.screens.tools_screen import ToolsScreen
 from depswiz.guide.screens.updates_screen import UpdatesScreen
+from depswiz.guide.screens.welcome_screen import WelcomeScreen
 
 __all__ = [
     "AIScreen",
@@ -14,4 +15,5 @@ __all__ = [
     "LicensesScreen",
     "ToolsScreen",
     "UpdatesScreen",
+    "WelcomeScreen",
 ]

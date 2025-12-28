@@ -17,6 +17,7 @@ ECOSYSTEM_MAP = {
     "rust": "RUST",
     "dart": "PUB",
     "javascript": "NPM",
+    "golang": "GO",
 }
 
 

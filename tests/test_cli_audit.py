@@ -99,8 +99,26 @@ class TestAuditCommand:
         mock_scan.return_value = CheckResult(packages=mock_packages, path=tmp_path)
         mock_audit.return_value = mock_audit_result
 
+        # Without --strict, should succeed even with vulnerabilities
         result = runner.invoke(app, ["audit", str(tmp_path)])
-        # Should fail because high severity vulnerability was found
+        assert result.exit_code == 0
+
+    @patch("depswiz.cli.commands.audit.audit_packages", new_callable=AsyncMock)
+    @patch("depswiz.cli.commands.audit.scan_dependencies", new_callable=AsyncMock)
+    def test_audit_with_vulnerabilities_strict(
+        self,
+        mock_scan: AsyncMock,
+        mock_audit: AsyncMock,
+        mock_packages: list[Package],
+        mock_audit_result: AuditResult,
+        tmp_path: Path,
+    ) -> None:
+        """Test audit command fails with --strict when vulnerabilities found."""
+        mock_scan.return_value = CheckResult(packages=mock_packages, path=tmp_path)
+        mock_audit.return_value = mock_audit_result
+
+        # With --strict, should fail on high severity
+        result = runner.invoke(app, ["audit", "--strict", "high", str(tmp_path)])
         assert result.exit_code == 1
 
     @patch("depswiz.cli.commands.audit.audit_packages", new_callable=AsyncMock)
@@ -134,9 +152,9 @@ class TestAuditCommand:
         mock_scan.return_value = CheckResult(packages=mock_packages, path=tmp_path)
         mock_audit.return_value = mock_audit_result
 
-        result = runner.invoke(app, ["audit", "--format", "json", str(tmp_path)])
-        # Will still fail due to high severity
-        assert result.exit_code == 1
+        result = runner.invoke(app, ["audit", "--json", str(tmp_path)])
+        # Without --strict, should succeed
+        assert result.exit_code == 0
         assert '"vulnerabilities"' in result.stdout
         assert '"GHSA-test-1234"' in result.stdout
 
@@ -154,8 +172,8 @@ class TestAuditCommand:
         mock_scan.return_value = CheckResult(packages=mock_packages, path=tmp_path)
         mock_audit.return_value = mock_audit_result
 
-        result = runner.invoke(app, ["audit", "--format", "markdown", str(tmp_path)])
-        assert result.exit_code == 1
+        result = runner.invoke(app, ["audit", "--md", str(tmp_path)])
+        assert result.exit_code == 0
         assert "# Security Audit Report" in result.stdout
 
 
@@ -191,14 +209,14 @@ class TestAuditSeverityFiltering:
 
         # Filter for high severity only - should not show low
         result = runner.invoke(
-            app, ["audit", "--severity", "high", "--format", "json", str(tmp_path)]
+            app, ["audit", "--severity", "high", "--json", str(tmp_path)]
         )
-        assert result.exit_code == 0  # No high severity vulns to fail on
+        assert result.exit_code == 0  # No high severity vulns
         assert '"vulnerabilities": []' in result.stdout
 
     @patch("depswiz.cli.commands.audit.audit_packages", new_callable=AsyncMock)
     @patch("depswiz.cli.commands.audit.scan_dependencies", new_callable=AsyncMock)
-    def test_audit_fail_on_critical_only(
+    def test_audit_strict_critical_only(
         self,
         mock_scan: AsyncMock,
         mock_audit: AsyncMock,
@@ -206,12 +224,12 @@ class TestAuditSeverityFiltering:
         mock_audit_result: AuditResult,
         tmp_path: Path,
     ) -> None:
-        """Test audit command only fails on critical when --fail-on critical."""
+        """Test audit command only fails on critical when --strict critical."""
         mock_scan.return_value = CheckResult(packages=mock_packages, path=tmp_path)
         mock_audit.return_value = mock_audit_result
 
-        # --fail-on critical means high severity should not cause failure
-        result = runner.invoke(app, ["audit", "--fail-on", "critical", str(tmp_path)])
+        # --strict critical means high severity should not cause failure
+        result = runner.invoke(app, ["audit", "--strict", "critical", str(tmp_path)])
         assert result.exit_code == 0  # High severity should not fail
 
     def test_audit_invalid_severity(self, tmp_path: Path) -> None:
@@ -246,30 +264,6 @@ class TestAuditIgnore:
         # Should succeed because the only vulnerability is ignored
         assert result.exit_code == 0
 
-    @patch("depswiz.cli.commands.audit.audit_packages", new_callable=AsyncMock)
-    @patch("depswiz.cli.commands.audit.scan_dependencies", new_callable=AsyncMock)
-    def test_audit_ignore_file(
-        self,
-        mock_scan: AsyncMock,
-        mock_audit: AsyncMock,
-        mock_packages: list[Package],
-        mock_audit_result: AuditResult,
-        tmp_path: Path,
-    ) -> None:
-        """Test audit command reads ignore file."""
-        mock_scan.return_value = CheckResult(packages=mock_packages, path=tmp_path)
-        mock_audit.return_value = mock_audit_result
-
-        # Create ignore file
-        ignore_file = tmp_path / ".depswiz-ignore"
-        ignore_file.write_text("# Comment\nGHSA-test-1234\n")
-
-        result = runner.invoke(
-            app, ["audit", "--ignore-file", str(ignore_file), str(tmp_path)]
-        )
-        # Should succeed because vulnerability is in ignore file
-        assert result.exit_code == 0
-
 
 class TestAuditOutputFile:
     """Tests for audit command output file option."""
@@ -290,7 +284,7 @@ class TestAuditOutputFile:
         output_file = tmp_path / "audit-report.json"
 
         result = runner.invoke(
-            app, ["audit", "--format", "json", "--output", str(output_file), str(tmp_path)]
+            app, ["audit", "--json", "--output", str(output_file), str(tmp_path)]
         )
         assert result.exit_code == 0
         assert output_file.exists()

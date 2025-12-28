@@ -1,6 +1,6 @@
 # depswiz
 
-**Dependency Wizard** - A multi-language dependency management CLI tool for modern development workflows.
+**Dependency Wizard** - One command to check everything. Multi-language dependency management for modern development workflows.
 
 [![PyPI version](https://img.shields.io/pypi/v/depswiz.svg)](https://pypi.org/project/depswiz/)
 [![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
@@ -9,19 +9,30 @@
 [![Coverage](https://img.shields.io/badge/coverage-48%25-yellow)](https://github.com/moinsen-dev/depswiz)
 [![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://moinsen-dev.github.io/depswiz/)
 
+## Why depswiz?
+
+```bash
+# Just run depswiz. That's it.
+depswiz
+```
+
+One command checks your dependencies, scans for vulnerabilities, and validates licenses - across Python, Rust, Dart, JavaScript, Go, and Docker. Zero configuration required.
+
 ## Features
 
-- **Multi-Language Support**: Python, Rust, Dart/Flutter, JavaScript/TypeScript
-- **Vulnerability Scanning**: Integrated with OSV, GitHub Advisories, RustSec
+- **Zero-Config CI/CD**: Auto-detects CI environments and enables strict mode automatically
+- **Multi-Language**: Python, Rust, Dart/Flutter, JavaScript/TypeScript, Go, and Docker
+- **Docker Support**: Scan Dockerfiles and Compose files for outdated base images
+- **Vulnerability Scanning**: Integrated with OSV, GitHub Advisories, RustSec, NVD
 - **License Compliance**: SPDX-based license checking with configurable policies
 - **SBOM Generation**: CycloneDX 1.6 and SPDX 3.0 formats
-- **Monorepo Support**: Auto-detect workspaces across all ecosystems
-- **Development Tools Checking**: Check if Node, Python, Rust, Dart, Flutter, uv, etc. are up to date
-- **Interactive Guide**: TUI dashboard with real-time health monitoring, wizard mode, and AI chat
+- **SARIF Output**: GitHub Code Scanning and VS Code integration
+- **Monorepo Support**: Auto-detect workspaces, recursive scanning by default
+- **Development Tools Checking**: Verify Node, Python, Rust, Dart, Flutter, uv, Docker are up to date
+- **Interactive Guide**: TUI dashboard with real-time health monitoring
 - **Deprecation Detection**: Scan and auto-fix deprecated API usage (Flutter/Dart)
 - **AI-Powered Suggestions**: Claude Code integration for intelligent upgrade strategies
 - **Beautiful CLI**: Rich output with tables, progress bars, and colors
-- **Plugin Architecture**: Extensible via Python entry points
 
 ## Installation
 
@@ -41,46 +52,45 @@ pip install -e .
 ## Quick Start
 
 ```bash
-# Check for outdated dependencies
-depswiz check
+# Check everything at once (dependencies + vulnerabilities + licenses)
+depswiz
 
-# Scan for vulnerabilities
-depswiz audit
-
-# Check license compliance
-depswiz licenses
-
-# Generate SBOM
-depswiz sbom -o sbom.json
-
-# Update dependencies interactively
-depswiz update
-
-# Check development tools for updates
-depswiz tools
-
-# Get AI-powered upgrade suggestions (requires Claude Code)
-depswiz suggest
-
-# Launch interactive dashboard
-depswiz guide
-
-# Scan for deprecated APIs (Flutter/Dart)
-depswiz deprecations
+# Or use individual commands
+depswiz check       # Check for outdated dependencies
+depswiz audit       # Scan for vulnerabilities
+depswiz licenses    # Check license compliance
+depswiz sbom        # Generate SBOM
+depswiz update      # Update dependencies interactively
+depswiz tools       # Check development tools
+depswiz suggest     # AI-powered suggestions (requires Claude Code)
+depswiz guide       # Launch interactive dashboard
+depswiz deprecations  # Scan for deprecated APIs (Flutter/Dart)
 ```
 
 ## Commands
+
+### `depswiz` (Comprehensive Scan)
+
+Run with no arguments to check everything at once.
+
+```bash
+depswiz                    # Full scan: deps + vulns + licenses
+depswiz --json             # JSON output for parsing
+depswiz --strict           # Fail if any issues found
+depswiz --only python      # Scan only Python projects
+```
 
 ### `depswiz check`
 
 Check dependencies for available updates.
 
 ```bash
-depswiz check                      # Check current directory
-depswiz check --workspace          # Check all workspace members
-depswiz check -l python -l rust    # Check only Python and Rust
-depswiz check --format json        # Output as JSON
-depswiz check --fail-outdated      # Exit 1 if outdated packages found
+depswiz check                    # Recursive scan (default)
+depswiz check --shallow          # Current directory only
+depswiz check --json             # JSON output
+depswiz check --strict           # Exit 1 if outdated found
+depswiz check --only python,rust # Filter by language
+depswiz check --prod             # Exclude dev dependencies
 ```
 
 ### `depswiz audit`
@@ -88,10 +98,11 @@ depswiz check --fail-outdated      # Exit 1 if outdated packages found
 Scan dependencies for known vulnerabilities.
 
 ```bash
-depswiz audit                      # Audit current directory
-depswiz audit --severity high      # Only show high+ severity
-depswiz audit --fail-on critical   # Fail on critical vulnerabilities
-depswiz audit --ignore CVE-2024-XXX  # Ignore specific vulnerability
+depswiz audit                    # Scan all vulnerabilities
+depswiz audit --strict           # Fail on any vulnerability
+depswiz audit --strict critical  # Fail only on critical
+depswiz audit --ignore CVE-2024-XXX  # Ignore specific CVE
+depswiz audit --sarif -o results.sarif  # SARIF for GitHub Code Scanning
 ```
 
 ### `depswiz licenses`
@@ -99,9 +110,10 @@ depswiz audit --ignore CVE-2024-XXX  # Ignore specific vulnerability
 Check license compliance.
 
 ```bash
-depswiz licenses                   # List all licenses
-depswiz licenses --summary         # License distribution only
-depswiz licenses --deny GPL-3.0    # Fail on GPL-3.0 licensed packages
+depswiz licenses                 # List all licenses
+depswiz licenses --summary       # License distribution only
+depswiz licenses --strict        # Fail on violations
+depswiz licenses --deny GPL-3.0  # Deny specific licenses
 ```
 
 ### `depswiz sbom`
@@ -109,9 +121,9 @@ depswiz licenses --deny GPL-3.0    # Fail on GPL-3.0 licensed packages
 Generate Software Bill of Materials.
 
 ```bash
-depswiz sbom -o sbom.json          # CycloneDX format (default)
-depswiz sbom --format spdx -o sbom.spdx.json
-depswiz sbom --include-transitive  # Include transitive dependencies
+depswiz sbom -o sbom.json        # CycloneDX format (default)
+depswiz sbom --spdx -o sbom.spdx.json  # SPDX format
+depswiz sbom --dev               # Include dev dependencies
 ```
 
 ### `depswiz update`
@@ -119,10 +131,10 @@ depswiz sbom --include-transitive  # Include transitive dependencies
 Update dependencies interactively.
 
 ```bash
-depswiz update                     # Interactive update
-depswiz update --dry-run           # Preview changes
-depswiz update --strategy patch    # Only patch updates
-depswiz update -y                  # Auto-confirm
+depswiz update                   # Interactive update
+depswiz update --dry-run         # Preview changes only
+depswiz update --strategy patch  # Only patch updates
+depswiz update -y                # Auto-confirm all
 ```
 
 ### `depswiz tools`
@@ -130,12 +142,10 @@ depswiz update -y                  # Auto-confirm
 Check development tools for updates.
 
 ```bash
-depswiz tools                      # Auto-detect and check relevant tools
-depswiz tools --all                # Check all 15 supported tools
-depswiz tools -t node -t python    # Check specific tools
-depswiz tools --updates-only       # Only show tools with updates
-depswiz tools --format json        # JSON output for CI
-depswiz tools --upgrade            # Use Claude Code to upgrade tools
+depswiz tools                    # Check relevant tools
+depswiz tools --all              # Check all 15 supported tools
+depswiz tools --updates-only     # Only show outdated
+depswiz tools --upgrade          # Use Claude Code to upgrade
 ```
 
 **Supported Tools:** Node.js, npm, pnpm, Yarn, Bun, Deno, Python, uv, pip, Rust, Cargo, Dart, Flutter, Go, Docker
@@ -145,54 +155,70 @@ depswiz tools --upgrade            # Use Claude Code to upgrade tools
 Get AI-powered upgrade suggestions using Claude Code.
 
 ```bash
-depswiz suggest                    # Full upgrade strategy
-depswiz suggest --focus security   # Focus on security vulnerabilities
-depswiz suggest --focus quick      # Quick health summary
-depswiz suggest --focus toolchain  # Analyze development tools
+depswiz suggest                  # Full upgrade strategy
+depswiz suggest --focus security # Focus on vulnerabilities
+depswiz suggest --focus quick    # Quick health summary
 ```
 
 **Note:** Requires [Claude Code CLI](https://claude.ai/code) to be installed.
 
 ### `depswiz guide`
 
-Interactive dependency management dashboard with three modes.
+Interactive dependency management dashboard.
 
 ```bash
-depswiz guide                      # Launch TUI dashboard
-depswiz guide --mode wizard        # Step-by-step guided wizard
-depswiz guide --mode chat          # Conversational mode with AI
-depswiz guide --watch              # Auto-refresh on file changes
-depswiz guide --skip-ai            # Disable AI features
+depswiz guide                    # Launch TUI dashboard
+depswiz guide --mode wizard      # Step-by-step wizard
+depswiz guide --mode chat        # Conversational mode
 ```
 
-**Dashboard Features:**
-- Real-time health score (0-100)
-- Vulnerability severity breakdown
-- Outdated packages by update type
-- License compliance status
-- Development tools version check
-
-**Keyboard Shortcuts:** `a`=Audit, `u`=Updates, `l`=Licenses, `t`=Tools, `c`=Chat, `s`=AI Suggestions, `q`=Quit
+**Keyboard Shortcuts:** `a`=Audit, `u`=Updates, `l`=Licenses, `t`=Tools, `c`=Chat, `s`=AI, `q`=Quit
 
 ### `depswiz deprecations`
 
 Detect and fix deprecated API usage in Flutter/Dart projects.
 
 ```bash
-depswiz deprecations               # Scan for deprecations
-depswiz deprecations --fix         # Auto-fix using dart fix
-depswiz deprecations --dry-run     # Preview fixes without applying
-depswiz deprecations --fixable-only  # Show only auto-fixable issues
-depswiz deprecations --package flutter  # Filter by package
-depswiz deprecations --format json  # JSON output for CI
-depswiz deprecations --fail-on breaking  # Exit 1 for breaking deprecations
+depswiz deprecations             # Scan for deprecations
+depswiz deprecations --fix       # Auto-fix with dart fix
+depswiz deprecations --ai-fix    # AI-powered complex fixes
+depswiz deprecations --fixable-only  # Show only auto-fixable
 ```
 
-**Supported Detection:**
-- `deprecated_member_use` - Standard deprecation warnings
-- `deprecated_member_use_from_same_package` - Internal deprecations
-- Automatic replacement suggestions extraction
-- Source package identification
+## CI/CD Integration
+
+### Zero-Configuration
+
+depswiz automatically detects CI environments and adjusts its behavior:
+
+- **Auto-strict mode**: Fails build on issues (no flags needed)
+- **Auto-JSON output**: Machine-readable output by default
+- **Recursive scanning**: Checks entire project tree
+
+**Detected Platforms:** GitHub Actions, GitLab CI, CircleCI, Travis CI, Jenkins, Azure Pipelines, Bitbucket Pipelines, TeamCity, Buildkite, Drone, Woodpecker, Codeship, Semaphore
+
+### GitHub Actions
+
+```yaml
+name: Security Check
+on: [push, pull_request]
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: pip install depswiz
+      - run: depswiz  # That's it! Strict mode auto-enabled
+```
+
+### Exit Codes
+
+- `0`: Success - no issues found
+- `1`: Issues found (with `--strict` or auto-enabled in CI)
 
 ## Configuration
 
@@ -203,18 +229,15 @@ Create a `depswiz.toml` in your project root:
 default_format = "cli"
 
 [languages]
-enabled = ["python", "rust", "dart", "javascript"]
+enabled = ["python", "rust", "dart", "javascript", "golang", "docker"]
 
 [check]
-recursive = false
-workspace = true
-strategy = "all"
+recursive = true
 warn_breaking = true
 
 [audit]
 severity_threshold = "low"
-fail_on = "high"
-sources = ["osv"]
+sources = ["osv", "ghsa", "rustsec", "nvd"]
 
 [licenses]
 policy_mode = "allow"
@@ -234,24 +257,27 @@ Or add to your `pyproject.toml`:
 default_format = "cli"
 
 [tool.depswiz.audit]
-fail_on = "high"
+severity_threshold = "high"
 ```
 
 ## Supported Languages
 
-| Language | Manifest | Lockfile | Registry |
-|----------|----------|----------|----------|
+| Language | Manifest Files | Lockfiles | Registry |
+|----------|---------------|-----------|----------|
 | Python | pyproject.toml, requirements.txt | uv.lock, poetry.lock | PyPI |
 | Rust | Cargo.toml | Cargo.lock | crates.io |
 | Dart/Flutter | pubspec.yaml | pubspec.lock | pub.dev |
 | JavaScript/TypeScript | package.json | package-lock.json, yarn.lock | npm |
+| Go | go.mod | go.sum | Go Module Proxy |
+| Docker | Dockerfile, docker-compose.yml | - | Docker Hub |
 
 ## Output Formats
 
 - **cli** (default): Rich terminal output with colors and tables
-- **json**: Machine-readable JSON
-- **markdown**: GitHub-compatible markdown
-- **html**: Self-contained HTML report
+- **json**: Machine-readable JSON (`--json`)
+- **markdown**: GitHub-compatible markdown (`--md`)
+- **html**: Self-contained HTML report (`--html`)
+- **sarif**: SARIF 2.1 for GitHub Code Scanning and VS Code (`--sarif`)
 - **cyclonedx**: CycloneDX 1.6 SBOM
 - **spdx**: SPDX 3.0 SBOM
 
@@ -280,26 +306,6 @@ Register via `pyproject.toml`:
 [project.entry-points."depswiz.languages"]
 mylang = "my_package:MyPlugin"
 ```
-
-## CI/CD Integration
-
-### GitHub Actions
-
-```yaml
-- name: Security Audit
-  run: depswiz audit --fail-on high
-
-- name: License Check
-  run: depswiz licenses --fail-on-unknown
-
-- name: Generate SBOM
-  run: depswiz sbom -o sbom.json
-```
-
-### Exit Codes
-
-- `0`: Success
-- `1`: Vulnerabilities or violations found (when using `--fail-*` options)
 
 ## Development
 
@@ -333,7 +339,8 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ## Acknowledgments
 
-- [OSV](https://osv.dev/) for vulnerability data
+- [OSV](https://osv.dev/), [NVD](https://nvd.nist.gov/), and [GitHub Advisories](https://github.com/advisories) for vulnerability data
 - [CycloneDX](https://cyclonedx.org/) and [SPDX](https://spdx.dev/) for SBOM standards
+- [SARIF](https://sarifweb.azurewebsites.net/) for static analysis result format
 - [Rich](https://github.com/Textualize/rich), [Typer](https://typer.tiangolo.com/), and [Textual](https://textual.textualize.io/) for beautiful CLI and TUI
 - [InquirerPy](https://github.com/kazhala/InquirerPy) for interactive prompts

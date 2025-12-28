@@ -5,23 +5,20 @@ Generate Software Bill of Materials (SBOM) in industry-standard formats.
 ## Usage
 
 ```bash
-depswiz sbom [OPTIONS] [PATH]
+depswiz sbom [OPTIONS]
 ```
-
-## Arguments
-
-| Argument | Description | Default |
-|----------|-------------|---------|
-| `PATH` | Project directory | Current directory |
 
 ## Options
 
 | Option | Description |
 |--------|-------------|
-| `-o`, `--output` | Output file path |
-| `--format` | SBOM format: cyclonedx (default), spdx |
-| `--include-transitive` | Include transitive dependencies |
-| `-l`, `--language` | Filter by language |
+| `-o`, `--output FILE` | Output file path (required) |
+| `--json` | Output as JSON (CycloneDX format) |
+| `--spdx` | Use SPDX format instead of CycloneDX |
+| `--only LANGS` | Filter by language(s), comma-separated |
+| `--shallow` | Scan current directory only (default: recursive) |
+| `--dev` | Include development dependencies |
+| `-p`, `--path PATH` | Project directory (default: current directory) |
 
 ## Examples
 
@@ -32,24 +29,34 @@ depswiz sbom [OPTIONS] [PATH]
 depswiz sbom -o sbom.json
 
 # Generate SPDX SBOM
-depswiz sbom --format spdx -o sbom.spdx.json
+depswiz sbom --spdx -o sbom.spdx.json
 ```
 
-### Include Transitive Dependencies
+### Include Development Dependencies
 
 ```bash
-# Include all transitive (indirect) dependencies
-depswiz sbom --include-transitive -o sbom-full.json
+# Include dev dependencies (excluded by default)
+depswiz sbom --dev -o sbom-full.json
 ```
 
 ### Language-Specific SBOM
 
 ```bash
 # Python dependencies only
-depswiz sbom -l python -o python-sbom.json
+depswiz sbom --only python -o python-sbom.json
 
 # Rust dependencies only
-depswiz sbom -l rust -o rust-sbom.json
+depswiz sbom --only rust -o rust-sbom.json
+```
+
+### Scanning Options
+
+```bash
+# Recursive scan (default)
+depswiz sbom -o sbom.json
+
+# Current directory only
+depswiz sbom --shallow -o sbom.json
 ```
 
 ## Output Formats
@@ -66,12 +73,12 @@ depswiz sbom -l rust -o rust-sbom.json
   "serialNumber": "urn:uuid:...",
   "version": 1,
   "metadata": {
-    "timestamp": "2024-12-27T12:00:00Z",
+    "timestamp": "2025-12-28T12:00:00Z",
     "tools": [
       {
         "vendor": "depswiz",
         "name": "depswiz",
-        "version": "0.2.0"
+        "version": "0.5.0"
       }
     ],
     "component": {
@@ -109,8 +116,8 @@ depswiz sbom -l rust -o rust-sbom.json
   "SPDXID": "SPDXRef-DOCUMENT",
   "name": "my-project-sbom",
   "creationInfo": {
-    "created": "2024-12-27T12:00:00Z",
-    "creators": ["Tool: depswiz-0.2.0"]
+    "created": "2025-12-28T12:00:00Z",
+    "creators": ["Tool: depswiz-0.5.0"]
   },
   "packages": [
     {
@@ -138,10 +145,10 @@ Many regulations now require SBOM generation:
 
 ```bash
 # Generate comprehensive SBOM for security review
-depswiz sbom --include-transitive -o sbom.json
+depswiz sbom --dev -o sbom.json
 
 # Combine with vulnerability scan
-depswiz audit --format json > vulnerabilities.json
+depswiz audit --json -o vulnerabilities.json
 ```
 
 ### CI/CD Integration
@@ -165,7 +172,7 @@ Configure SBOM generation in `depswiz.toml`:
 ```toml
 [sbom]
 format = "cyclonedx"  # or "spdx"
-include_transitive = true
+include_dev = false
 output_dir = "reports/"
 ```
 
@@ -179,6 +186,7 @@ depswiz generates Package URLs ([PURL](https://github.com/package-url/purl-spec)
 | Rust | `pkg:cargo/package@version` |
 | Dart | `pkg:pub/package@version` |
 | JavaScript | `pkg:npm/package@version` |
+| Docker | `pkg:docker/image@tag` |
 
 ## See Also
 

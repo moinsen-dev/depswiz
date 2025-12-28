@@ -9,6 +9,7 @@ from depswiz.core.config import Config
 from depswiz.core.logging import get_logger
 from depswiz.core.models import Package, Vulnerability
 from depswiz.security.sources.ghsa import GhsaSource
+from depswiz.security.sources.nvd import NvdSource
 from depswiz.security.sources.osv import OsvSource
 from depswiz.security.sources.rustsec import RustSecSource
 
@@ -36,6 +37,9 @@ class VulnerabilityAggregator:
 
         if "rustsec" in enabled_sources:
             self.sources.append(RustSecSource())
+
+        if "nvd" in enabled_sources:
+            self.sources.append(NvdSource())
 
     async def check_packages(self, packages: list[Package]) -> list[tuple[Package, Vulnerability]]:
         """Check multiple packages for vulnerabilities.

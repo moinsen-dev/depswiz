@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "depswiz"
-version = "0.4.0"
+version = "0.5.0"
 description = "Multi-language dependency wizard - check, audit, and update dependencies across Python, Rust, Dart, and JavaScript ecosystems"
 readme = "README.md"
 license = "MIT"
@@ -87,6 +87,8 @@ python = "depswiz.plugins.python:PythonPlugin"
 rust = "depswiz.plugins.rust:RustPlugin"
 dart = "depswiz.plugins.dart:DartPlugin"
 javascript = "depswiz.plugins.javascript:JavaScriptPlugin"
+docker = "depswiz.plugins.docker:DockerPlugin"
+golang = "depswiz.plugins.golang:GoPlugin"
 
 [project.urls]
 Homepage = "https://github.com/moinsen-dev/depswiz"

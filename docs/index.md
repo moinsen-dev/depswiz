@@ -1,20 +1,32 @@
 # depswiz
 
-**Dependency Wizard** - A multi-language dependency management CLI tool for modern development workflows.
+**Dependency Wizard** - One command to check everything. Multi-language dependency management for modern development workflows.
 
 <div class="grid cards" markdown>
+
+-   :material-rocket-launch: **Zero Configuration**
+
+    ---
+
+    Just run `depswiz` - that's it. One command checks dependencies, vulnerabilities, and licenses across your entire project.
 
 -   :material-language-python: **Multi-Language**
 
     ---
 
-    Check dependencies across Python, Rust, Dart/Flutter, and JavaScript/TypeScript ecosystems
+    Check dependencies across Python, Rust, Dart/Flutter, JavaScript/TypeScript, Go, and Docker ecosystems
 
 -   :material-shield-check: **Security First**
 
     ---
 
-    Scan for vulnerabilities using OSV, GitHub Advisories, and RustSec databases
+    Scan for vulnerabilities using OSV, GitHub Advisories, RustSec, and NVD databases
+
+-   :material-docker: **Docker Support**
+
+    ---
+
+    Scan Dockerfiles and docker-compose.yml for outdated base images
 
 -   :material-file-document: **SBOM Generation**
 
@@ -39,6 +51,12 @@
     ---
 
     Find and auto-fix deprecated APIs in Flutter/Dart projects using `dart analyze` and `dart fix`
+
+-   :material-cog-sync: **Zero-Config CI/CD**
+
+    ---
+
+    Auto-detects CI environments and enables strict mode. Works out of the box with GitHub Actions, GitLab CI, and more.
 
 </div>
 
@@ -67,24 +85,29 @@
 ## Quick Start
 
 ```bash
-# Check for outdated dependencies
-depswiz check
+# Check everything at once (dependencies + vulnerabilities + licenses)
+depswiz
 
-# Scan for security vulnerabilities
-depswiz audit
-
-# Check development tools
-depswiz tools
-
-# Get AI-powered suggestions (requires Claude Code)
-depswiz suggest
-
-# Launch interactive dashboard
-depswiz guide
-
-# Scan for deprecated APIs (Flutter/Dart)
-depswiz deprecations
+# Or use individual commands
+depswiz check       # Check for outdated dependencies
+depswiz audit       # Scan for security vulnerabilities
+depswiz licenses    # Check license compliance
+depswiz tools       # Check development tools
+depswiz suggest     # Get AI-powered suggestions (requires Claude Code)
+depswiz guide       # Launch interactive dashboard
+depswiz deprecations  # Scan for deprecated APIs (Flutter/Dart)
 ```
+
+## CI/CD Integration
+
+depswiz automatically detects CI environments and adjusts its behavior:
+
+```yaml
+# GitHub Actions - just one line!
+- run: depswiz  # Strict mode auto-enabled in CI
+```
+
+**Auto-detected platforms:** GitHub Actions, GitLab CI, CircleCI, Travis CI, Jenkins, Azure Pipelines, and more.
 
 ## Features
 
@@ -98,6 +121,8 @@ depswiz understands the package ecosystems of multiple languages:
 | Rust | `Cargo.toml` | `Cargo.lock` | crates.io |
 | Dart/Flutter | `pubspec.yaml` | `pubspec.lock` | pub.dev |
 | JavaScript/TypeScript | `package.json` | `package-lock.json`, `yarn.lock` | npm |
+| Go | `go.mod` | `go.sum` | Go Module Proxy |
+| Docker | `Dockerfile`, `docker-compose.yml` | - | Docker Hub |
 
 ### Development Tools Checking
 
@@ -124,6 +149,7 @@ depswiz suggest --focus security
 ## Why depswiz?
 
 - **One tool for all languages**: No need to remember different commands for each ecosystem
+- **Zero configuration**: Recursive scanning, strict mode in CI - all automatic
 - **Security focused**: Vulnerability scanning is built-in, not an afterthought
 - **Modern CLI**: Beautiful output with Rich, intuitive commands with Typer
 - **Extensible**: Plugin architecture allows adding new language support

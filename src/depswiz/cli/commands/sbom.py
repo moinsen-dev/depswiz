@@ -7,6 +7,7 @@ import typer
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
+from depswiz.cli.context import parse_language_filter
 from depswiz.core.config import load_config
 from depswiz.core.scanner import scan_dependencies
 from depswiz.sbom import CycloneDxGenerator, SpdxGenerator
@@ -25,24 +26,19 @@ def sbom(
         file_okay=False,
         dir_okay=True,
     ),
-    language: list[str] | None = typer.Option(
+    # Simplified language filter
+    only: str | None = typer.Option(
         None,
-        "--language",
-        "-l",
-        help="Filter by language (can be repeated)",
+        "--only",
+        help="Only scan specific languages (comma-separated, e.g., python,docker)",
     ),
-    recursive: bool = typer.Option(
+    # Recursive is now TRUE by default, --shallow to opt-out
+    shallow: bool = typer.Option(
         False,
-        "--recursive",
-        "-r",
-        help="Scan subdirectories",
+        "--shallow",
+        help="Only scan current directory (don't recurse)",
     ),
-    workspace: bool = typer.Option(
-        False,
-        "--workspace",
-        "-w",
-        help="Detect and scan workspaces",
-    ),
+    # SBOM format
     sbom_format: str = typer.Option(
         "cyclonedx",
         "--format",
@@ -54,14 +50,16 @@ def sbom(
         "--spec-version",
         help="Spec version (cyclonedx: 1.6, spdx: 3.0)",
     ),
-    include_dev: bool = typer.Option(
+    # Dev dependencies: --dev to include
+    dev: bool = typer.Option(
         False,
-        "--include-dev",
+        "--dev",
         help="Include development dependencies",
     ),
-    include_transitive: bool = typer.Option(
+    # Transitive dependencies
+    transitive: bool = typer.Option(
         True,
-        "--include-transitive/--no-transitive",
+        "--transitive/--no-transitive",
         help="Include transitive dependencies from lockfiles",
     ),
     output: Path | None = typer.Option(
@@ -70,29 +68,46 @@ def sbom(
         "-o",
         help="Output file (defaults to stdout)",
     ),
-    component_name: str | None = typer.Option(
+    # Component metadata
+    name: str | None = typer.Option(
         None,
         "--name",
-        help="Component name for SBOM",
+        help="Component name for SBOM (defaults to directory name)",
     ),
-    component_version: str | None = typer.Option(
+    version: str | None = typer.Option(
         None,
         "--version",
         help="Component version for SBOM",
     ),
 ) -> None:
-    """Generate Software Bill of Materials."""
+    """Generate Software Bill of Materials.
+
+    By default, scans the entire project recursively and generates
+    a CycloneDX 1.6 SBOM.
+
+    Examples:
+        depswiz sbom                      # Generate SBOM to stdout
+        depswiz sbom -o sbom.json         # Save to file
+        depswiz sbom --format spdx        # SPDX format
+        depswiz sbom --dev                # Include dev deps
+        depswiz sbom --only python
+    """
     # Load configuration
     config_path = ctx.obj.get("config_path") if ctx.obj else None
     config = load_config(config_path, path)
 
+    # Recursive is TRUE by default now
+    recursive = not shallow
+
+    # Parse language filter
+    languages = parse_language_filter(only)
+
     # Override config with CLI options
-    if include_dev:
-        config.sbom.include_dev = include_dev
-    if not include_transitive:
+    if dev:
+        config.sbom.include_dev = True
+    if not transitive:
         config.sbom.include_transitive = False
 
-    ctx.obj.get("verbose", False) if ctx.obj else False
     quiet = ctx.obj.get("quiet", False) if ctx.obj else False
 
     # Determine spec version
@@ -111,9 +126,9 @@ def sbom(
         check_result = asyncio.run(
             scan_dependencies(
                 path=path,
-                languages=language,
-                recursive=recursive or config.check.recursive,
-                workspace=workspace or config.check.workspace,
+                languages=languages,
+                recursive=recursive,
+                workspace=True,  # Always detect workspaces
                 include_dev=config.sbom.include_dev,
                 config=config,
                 progress_callback=lambda msg: progress.update(task, description=msg),
@@ -131,8 +146,8 @@ def sbom(
 
         sbom_content = generator.generate(
             packages=check_result.packages,
-            component_name=component_name or path.name,
-            component_version=component_version or "0.0.0",
+            component_name=name or path.name,
+            component_version=version or "0.0.0",
         )
 
         progress.update(task, description="Done!")

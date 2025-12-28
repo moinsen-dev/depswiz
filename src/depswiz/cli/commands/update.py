@@ -10,6 +10,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.prompt import Confirm
 from rich.table import Table
 
+from depswiz.cli.context import parse_language_filter
 from depswiz.core.config import load_config
 from depswiz.core.models import UpdateType
 from depswiz.core.scanner import scan_dependencies
@@ -29,18 +30,27 @@ def update(
         file_okay=False,
         dir_okay=True,
     ),
-    language: list[str] | None = typer.Option(
+    # Simplified language filter
+    only: str | None = typer.Option(
         None,
-        "--language",
-        "-l",
-        help="Filter by language (can be repeated)",
+        "--only",
+        help="Only update specific languages (comma-separated, e.g., python,docker)",
     ),
+    # Update strategy
     strategy: str = typer.Option(
         "minor",
         "--strategy",
         "-s",
         help="Update strategy: all, security, patch, minor, major",
     ),
+    # Specific packages
+    package: list[str] | None = typer.Option(
+        None,
+        "--package",
+        "-p",
+        help="Update specific package only (can be repeated)",
+    ),
+    # Control options
     dry_run: bool = typer.Option(
         False,
         "--dry-run",
@@ -57,22 +67,30 @@ def update(
         "--no-lockfile",
         help="Don't update lockfiles",
     ),
-    package: list[str] | None = typer.Option(
-        None,
-        "--package",
-        "-p",
-        help="Update specific package only (can be repeated)",
-    ),
 ) -> None:
-    """Update dependencies interactively."""
+    """Update dependencies interactively.
+
+    By default, scans the entire project recursively and proposes
+    minor and patch updates.
+
+    Examples:
+        depswiz update                  # Interactive update
+        depswiz update --strategy patch # Only patch updates
+        depswiz update --dry-run        # Preview changes
+        depswiz update -y               # Skip confirmation
+        depswiz update -p requests      # Update specific package
+    """
     # Load configuration
     config_path = ctx.obj.get("config_path") if ctx.obj else None
     config = load_config(config_path, path)
 
+    # Parse language filter
+    languages = parse_language_filter(only)
+
     verbose = ctx.obj.get("verbose", False) if ctx.obj else False
     quiet = ctx.obj.get("quiet", False) if ctx.obj else False
 
-    # Run the scan
+    # Run the scan - recursive by default
     with Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
@@ -84,9 +102,9 @@ def update(
         check_result = asyncio.run(
             scan_dependencies(
                 path=path,
-                languages=language,
-                recursive=config.check.recursive,
-                workspace=config.check.workspace,
+                languages=languages,
+                recursive=True,  # Always scan recursively
+                workspace=True,  # Always detect workspaces
                 include_dev=True,
                 config=config,
                 progress_callback=lambda msg: progress.update(task, description=msg),

@@ -97,3 +97,41 @@ dev_dependencies:
     pubspec = tmp_path / "pubspec.yaml"
     pubspec.write_text(content)
     return pubspec
+
+
+@pytest.fixture
+def sample_dockerfile(tmp_path: Path) -> Path:
+    """Create a sample Dockerfile."""
+    content = """
+FROM python:3.11-slim AS builder
+RUN pip install poetry
+
+FROM python:3.11-slim
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+CMD ["python", "app.py"]
+"""
+    dockerfile = tmp_path / "Dockerfile"
+    dockerfile.write_text(content)
+    return dockerfile
+
+
+@pytest.fixture
+def sample_compose_file(tmp_path: Path) -> Path:
+    """Create a sample docker-compose.yml file."""
+    content = """
+version: '3.8'
+services:
+  web:
+    image: nginx:1.24
+    ports:
+      - "80:80"
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_PASSWORD: secret
+  cache:
+    image: redis:latest
+"""
+    compose = tmp_path / "docker-compose.yml"
+    compose.write_text(content)
+    return compose

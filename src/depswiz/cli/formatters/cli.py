@@ -218,3 +218,149 @@ class CliFormatter(OutputFormatter):
             self.console.print("\n[green]All licenses are compliant![/green]")
 
         return ""
+
+    def format_comprehensive_scan(
+        self,
+        check_result: CheckResult,
+        audit_result: AuditResult,
+        license_result: LicenseResult,
+    ) -> str:
+        """Format a comprehensive scan combining all checks."""
+        from rich.panel import Panel
+
+        # Header
+        self.console.print(
+            Panel.fit(
+                f"[bold blue]depswiz[/bold blue] v{__version__} - Comprehensive Scan",
+                border_style="blue",
+            )
+        )
+
+        if check_result.path:
+            self.console.print(f"[dim]Scanning: {check_result.path}[/dim]\n")
+
+        # Quick summary counts
+        outdated_count = len(check_result.outdated_packages)
+        vuln_count = audit_result.total_vulnerabilities
+        violation_count = len(license_result.violations)
+
+        # Status indicator
+        if outdated_count == 0 and vuln_count == 0 and violation_count == 0:
+            self.console.print("[bold green]✓ All checks passed![/bold green]\n")
+        else:
+            issues = []
+            if outdated_count > 0:
+                issues.append(f"[yellow]{outdated_count} outdated[/yellow]")
+            if vuln_count > 0:
+                issues.append(f"[red]{vuln_count} vulnerabilities[/red]")
+            if violation_count > 0:
+                issues.append(f"[red]{violation_count} license violations[/red]")
+            self.console.print(f"[bold]Issues found:[/bold] {', '.join(issues)}\n")
+
+        # Section 1: Outdated packages (condensed)
+        self.console.print("[bold]📦 Dependencies[/bold]")
+        self.console.print("-" * 40)
+
+        if check_result.outdated_packages:
+            table = Table(show_header=True, header_style="bold", box=None)
+            table.add_column("Package", style="cyan")
+            table.add_column("Current", style="yellow")
+            table.add_column("Latest", style="green")
+            table.add_column("Type")
+
+            for pkg in check_result.outdated_packages[:10]:  # Top 10
+                update_type = pkg.update_type.value if pkg.update_type else "update"
+                color = {"patch": "blue", "minor": "yellow", "major": "red"}.get(
+                    update_type, "white"
+                )
+                table.add_row(
+                    pkg.display_name,
+                    pkg.current_version or "?",
+                    pkg.latest_version or "?",
+                    f"[{color}]{update_type}[/{color}]",
+                )
+
+            self.console.print(table)
+            if len(check_result.outdated_packages) > 10:
+                self.console.print(
+                    f"[dim]...and {len(check_result.outdated_packages) - 10} more[/dim]"
+                )
+        else:
+            self.console.print("[green]All packages up to date[/green]")
+
+        # Section 2: Vulnerabilities (condensed)
+        self.console.print("\n[bold]🔒 Security[/bold]")
+        self.console.print("-" * 40)
+
+        if audit_result.vulnerabilities:
+            counts = []
+            if audit_result.critical_count:
+                counts.append(f"[red]{audit_result.critical_count} critical[/red]")
+            if audit_result.high_count:
+                counts.append(f"[orange1]{audit_result.high_count} high[/orange1]")
+            if audit_result.medium_count:
+                counts.append(f"[yellow]{audit_result.medium_count} medium[/yellow]")
+            if audit_result.low_count:
+                counts.append(f"[blue]{audit_result.low_count} low[/blue]")
+
+            self.console.print(" | ".join(counts))
+
+            # Show top 5 vulnerabilities
+            table = Table(show_header=True, header_style="bold", box=None)
+            table.add_column("Package", style="cyan")
+            table.add_column("Severity")
+            table.add_column("ID")
+
+            for pkg, vuln in audit_result.vulnerabilities[:5]:
+                severity_style = self._get_severity_style(vuln.severity)
+                table.add_row(
+                    pkg.name,
+                    f"[{severity_style}]{vuln.severity.value.upper()}[/{severity_style}]",
+                    vuln.id,
+                )
+
+            self.console.print(table)
+            if len(audit_result.vulnerabilities) > 5:
+                self.console.print(
+                    f"[dim]...and {len(audit_result.vulnerabilities) - 5} more[/dim]"
+                )
+        else:
+            self.console.print("[green]No vulnerabilities found[/green]")
+
+        # Section 3: Licenses (condensed)
+        self.console.print("\n[bold]📜 Licenses[/bold]")
+        self.console.print("-" * 40)
+
+        if license_result.violations:
+            for pkg, reason in license_result.violations[:5]:
+                self.console.print(f"  [red]✗ {pkg.name}: {reason}[/red]")
+            if len(license_result.violations) > 5:
+                self.console.print(
+                    f"[dim]...and {len(license_result.violations) - 5} more[/dim]"
+                )
+        elif license_result.warnings:
+            for pkg, reason in license_result.warnings[:3]:
+                self.console.print(f"  [yellow]⚠ {pkg.name}: {reason}[/yellow]")
+            if len(license_result.warnings) > 3:
+                self.console.print(
+                    f"[dim]...and {len(license_result.warnings) - 3} more[/dim]"
+                )
+        else:
+            self.console.print("[green]All licenses compliant[/green]")
+
+        # Footer with next steps
+        self.console.print("\n" + "=" * 40)
+        breakdown = check_result.update_breakdown
+        self.console.print(
+            f"[bold]Summary:[/bold] {check_result.total_packages} packages, "
+            f"{outdated_count} outdated ({breakdown[UpdateType.MAJOR]} major, "
+            f"{breakdown[UpdateType.MINOR]} minor, {breakdown[UpdateType.PATCH]} patch), "
+            f"{vuln_count} vulnerabilities, {violation_count} license issues"
+        )
+
+        if outdated_count > 0 or vuln_count > 0:
+            self.console.print(
+                "\n[dim]Run `depswiz check` for details or `depswiz update` to update[/dim]"
+            )
+
+        return ""

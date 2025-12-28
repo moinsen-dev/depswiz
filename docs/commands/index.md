@@ -2,10 +2,18 @@
 
 depswiz provides a comprehensive set of commands for dependency management across multiple languages.
 
+## Quick Start
+
+```bash
+# Just run depswiz - comprehensive scan of everything
+depswiz
+```
+
 ## Command Overview
 
 | Command | Description |
 |---------|-------------|
+| `depswiz` | Comprehensive scan (check + audit + licenses) |
 | [check](check.md) | Check dependencies for available updates |
 | [audit](audit.md) | Scan for security vulnerabilities |
 | [licenses](licenses.md) | Check license compliance |
@@ -22,52 +30,72 @@ All commands support these global options:
 
 | Option | Description |
 |--------|-------------|
+| `--json` | Output as JSON |
+| `--md` | Output as Markdown |
+| `--html` | Output as HTML |
+| `-o`, `--output FILE` | Write output to file |
+| `--strict` | Exit with code 1 on issues (auto-enabled in CI) |
+| `--only LANGS` | Filter by language(s), comma-separated |
+| `--shallow` | Scan current directory only (default: recursive) |
+| `--prod` | Exclude development dependencies |
+| `-v`, `--verbose` | Show detailed output |
+| `-q`, `--quiet` | Suppress non-essential output |
+| `-V`, `--version` | Show version and exit |
 | `--help` | Show help message and exit |
-| `--version` | Show version and exit |
-| `--format`, `-f` | Output format: cli, json, markdown, html |
-| `--quiet`, `-q` | Suppress non-essential output |
-| `--verbose`, `-v` | Show detailed output |
 
 ## Exit Codes
 
-depswiz uses standard exit codes:
-
 | Code | Meaning |
 |------|---------|
-| 0 | Success |
-| 1 | Vulnerabilities, violations, or errors found (with `--fail-*` flags) |
+| 0 | Success - no issues found |
+| 1 | Issues found (with `--strict` or auto-enabled in CI) |
 | 2 | Invalid arguments or configuration |
 
 ## Examples
 
-### Quick Health Check
+### Comprehensive Scan
 
 ```bash
-# Check everything in current directory
-depswiz check
-depswiz audit
-depswiz licenses
+# Full scan: dependencies + vulnerabilities + licenses
+depswiz
+
+# Save comprehensive report
+depswiz --json -o report.json
+
+# Fail on any issues
+depswiz --strict
 ```
 
 ### CI/CD Pipeline
 
 ```bash
-# Fail on security issues
-depswiz audit --fail-on high
+# In CI, just run depswiz - strict mode auto-enabled
+depswiz
 
-# Check license compliance
-depswiz licenses --deny GPL-3.0
-
-# Generate SBOM for compliance
-depswiz sbom -o sbom.json
+# Or be explicit
+depswiz audit --strict
+depswiz licenses --strict
 ```
 
 ### Multi-Language Project
 
 ```bash
 # Check specific languages
-depswiz check -l python -l rust
+depswiz check --only python,rust
 
-# Check entire workspace
-depswiz check --workspace
+# Check entire workspace (recursive by default)
+depswiz check
+```
+
+### Output Formats
+
+```bash
+# JSON for machine processing
+depswiz check --json
+
+# Markdown for documentation
+depswiz audit --md -o SECURITY.md
+
+# HTML report
+depswiz licenses --html -o licenses.html
 ```

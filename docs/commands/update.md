@@ -5,24 +5,21 @@ Update dependencies interactively with preview and confirmation.
 ## Usage
 
 ```bash
-depswiz update [OPTIONS] [PATH]
+depswiz update [OPTIONS]
 ```
-
-## Arguments
-
-| Argument | Description | Default |
-|----------|-------------|---------|
-| `PATH` | Project directory | Current directory |
 
 ## Options
 
 | Option | Description |
 |--------|-------------|
-| `-l`, `--language` | Filter by language |
+| `--json` | Output as JSON |
+| `--only LANGS` | Filter by language(s), comma-separated |
+| `--shallow` | Scan current directory only (default: recursive) |
 | `--strategy` | Update strategy: all, security, patch, minor, major |
 | `--dry-run` | Preview changes without applying |
 | `-y`, `--yes` | Auto-confirm all updates |
 | `--ai-suggest` | Get AI suggestions before updating |
+| `-p`, `--path PATH` | Project directory (default: current directory) |
 
 ## Examples
 
@@ -84,31 +81,44 @@ This invokes Claude Code to analyze your dependencies and provide:
 - Risk assessment
 - Migration tips
 
+### Scanning Options
+
+```bash
+# Recursive scan (default)
+depswiz update
+
+# Current directory only
+depswiz update --shallow
+
+# Filter by language
+depswiz update --only python,rust
+```
+
 ## Output
 
 ### Interactive Mode
 
 ```
-depswiz v0.2.0 - Dependency Update
+depswiz v0.5.0 - Dependency Update
 
 Scanning for updates...
 
 ┏━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━━━━┓
 ┃ Package         ┃ Current   ┃ Latest    ┃ Update Type   ┃
 ┡━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━━━━┩
-│ httpx           │ 0.27.0    │ 0.28.1    │ ⚠️  minor     │
-│ rich            │ 13.9.0    │ 13.9.4    │ ✓ patch       │
-│ typer           │ 0.15.0    │ 0.15.1    │ ✓ patch       │
+│ httpx           │ 0.27.0    │ 0.28.1    │ minor         │
+│ rich            │ 13.9.0    │ 13.9.4    │ patch         │
+│ typer           │ 0.15.0    │ 0.15.1    │ patch         │
 └─────────────────┴───────────┴───────────┴───────────────┘
 
-⚠️  1 minor update may contain breaking changes
+1 minor update may contain breaking changes
 
 Apply updates? [y/N]: y
 
 Updating packages...
-✓ Updated rich 13.9.0 → 13.9.4
-✓ Updated typer 0.15.0 → 0.15.1
-✓ Updated httpx 0.27.0 → 0.28.1
+Updated rich 13.9.0 → 13.9.4
+Updated typer 0.15.0 → 0.15.1
+Updated httpx 0.27.0 → 0.28.1
 
 3 packages updated successfully
 ```
@@ -116,7 +126,7 @@ Updating packages...
 ### Dry Run Mode
 
 ```
-depswiz v0.2.0 - Dependency Update (Dry Run)
+depswiz v0.5.0 - Dependency Update (Dry Run)
 
 The following updates would be applied:
 

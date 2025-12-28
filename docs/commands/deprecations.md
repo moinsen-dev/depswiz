@@ -33,8 +33,10 @@ depswiz deprecations [OPTIONS] [PATH]
 
 | Option | Description |
 |--------|-------------|
-| `--format`, `-f` | Output format: `cli`, `json`, `markdown`, `html` |
-| `--output`, `-o` | Write output to file |
+| `--json` | Output as JSON |
+| `--md` | Output as Markdown |
+| `--html` | Output as HTML |
+| `-o`, `--output` | Write output to file |
 
 ### Actions
 
@@ -127,13 +129,13 @@ Claude Code provides:
 
 ```bash
 # JSON output
-depswiz deprecations --format json
+depswiz deprecations --json
 
 # Save to file
-depswiz deprecations --format markdown -o report.md
+depswiz deprecations --md -o report.md
 
 # HTML report
-depswiz deprecations --format html -o report.html
+depswiz deprecations --html -o report.html
 ```
 
 ### CI/CD Integration
@@ -183,7 +185,7 @@ depswiz deprecations --fail-on breaking
 
 ```json
 {
-  "version": "0.4.0",
+  "version": "0.5.0",
   "command": "deprecations",
   "timestamp": "2025-12-27T22:30:00Z",
   "project": {

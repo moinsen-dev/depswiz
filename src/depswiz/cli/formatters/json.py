@@ -5,7 +5,14 @@ from typing import Any
 
 from depswiz import __version__
 from depswiz.cli.formatters.base import OutputFormatter
-from depswiz.core.models import AuditResult, CheckResult, LicenseResult, Package, Vulnerability
+from depswiz.core.models import (
+    AuditResult,
+    CheckResult,
+    LicenseResult,
+    Package,
+    UpdateType,
+    Vulnerability,
+)
 
 
 class JsonFormatter(OutputFormatter):
@@ -130,3 +137,67 @@ class JsonFormatter(OutputFormatter):
             "references": vuln.references,
             "published": vuln.published.isoformat() if vuln.published else None,
         }
+
+    def format_comprehensive_scan(
+        self,
+        check_result: CheckResult,
+        audit_result: AuditResult,
+        license_result: LicenseResult,
+    ) -> str:
+        """Format comprehensive scan results as JSON."""
+        # Determine overall status
+        has_outdated = len(check_result.outdated_packages) > 0
+        has_vulns = audit_result.total_vulnerabilities > 0
+        has_violations = license_result.has_violations
+
+        if has_vulns or has_violations:
+            status = "critical"
+        elif has_outdated:
+            status = "warning"
+        else:
+            status = "ok"
+
+        data = {
+            "version": __version__,
+            "timestamp": check_result.timestamp.isoformat(),
+            "command": "scan",
+            "status": status,
+            "path": str(check_result.path) if check_result.path else None,
+            "summary": {
+                "total_packages": check_result.total_packages,
+                "outdated_packages": len(check_result.outdated_packages),
+                "update_breakdown": {
+                    ut.value: count for ut, count in check_result.update_breakdown.items()
+                },
+                "vulnerabilities": {
+                    "total": audit_result.total_vulnerabilities,
+                    "critical": audit_result.critical_count,
+                    "high": audit_result.high_count,
+                    "medium": audit_result.medium_count,
+                    "low": audit_result.low_count,
+                },
+                "licenses": {
+                    "violations": len(license_result.violations),
+                    "warnings": len(license_result.warnings),
+                    "distribution": license_result.license_summary,
+                },
+            },
+            "outdated": [self._package_to_dict(pkg) for pkg in check_result.outdated_packages],
+            "vulnerabilities": [
+                {
+                    "package": self._package_to_dict(pkg),
+                    "vulnerability": self._vulnerability_to_dict(vuln),
+                }
+                for pkg, vuln in audit_result.vulnerabilities
+            ],
+            "license_violations": [
+                {"package": pkg.name, "reason": reason}
+                for pkg, reason in license_result.violations
+            ],
+            "license_warnings": [
+                {"package": pkg.name, "reason": reason}
+                for pkg, reason in license_result.warnings
+            ],
+        }
+
+        return json.dumps(data, indent=2, default=str)

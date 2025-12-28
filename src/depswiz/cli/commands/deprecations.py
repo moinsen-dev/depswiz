@@ -427,7 +427,7 @@ def _format_json(result: DeprecationResult, filtered: list) -> str:
     import json
 
     data = {
-        "version": "0.4.0",
+        "version": "0.5.0",
         "command": "deprecations",
         "timestamp": result.timestamp.isoformat(),
         "project": {
