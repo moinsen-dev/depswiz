@@ -98,11 +98,11 @@ def suggest(
         "-f",
         help="Analysis focus: upgrade, security, breaking, quick, toolchain",
     ),
-    timeout: int = typer.Option(
-        300,
+    timeout: int | None = typer.Option(
+        None,
         "--timeout",
         "-t",
-        help="Timeout in seconds for Claude response",
+        help="Timeout in seconds for Claude response (default: no timeout)",
     ),
     raw: bool = typer.Option(
         False,
@@ -257,9 +257,10 @@ def suggest(
             )
 
     except subprocess.TimeoutExpired:
+        timeout_msg = f" after {timeout} seconds" if timeout else ""
         console.print(
-            f"[red]Claude timed out after {timeout} seconds.[/red]\n"
-            "Try increasing the timeout with --timeout"
+            f"[red]Claude timed out{timeout_msg}.[/red]\n"
+            "Try increasing the timeout with --timeout or remove the timeout limit"
         )
         raise typer.Exit(1)
 

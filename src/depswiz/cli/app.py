@@ -11,7 +11,6 @@ from depswiz.cli.commands import (
     audit,
     check,
     deprecations,
-    guide,
     licenses,
     plugins,
     sbom,
@@ -48,9 +47,6 @@ app.add_typer(
     suggest.app, name="suggest", help="AI-powered upgrade suggestions (requires Claude Code)"
 )
 app.add_typer(tools.app, name="tools", help="Check development tools for updates")
-app.add_typer(
-    guide.app, name="guide", help="Interactive dependency guide (TUI, wizard, or chat)"
-)
 app.add_typer(
     deprecations.app,
     name="deprecations",

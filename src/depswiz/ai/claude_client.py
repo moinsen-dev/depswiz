@@ -44,12 +44,12 @@ def is_available() -> bool:
     return find_claude_binary() is not None
 
 
-def run_claude(prompt: str, timeout: int = 300, cwd: Path | None = None) -> str:
+def run_claude(prompt: str, timeout: int | None = None, cwd: Path | None = None) -> str:
     """Execute Claude Code CLI and return response.
 
     Args:
         prompt: The prompt to send to Claude
-        timeout: Timeout in seconds (default: 300 = 5 minutes)
+        timeout: Timeout in seconds (default: None = no timeout)
         cwd: Working directory to run Claude in (default: current directory)
 
     Returns:
@@ -57,7 +57,7 @@ def run_claude(prompt: str, timeout: int = 300, cwd: Path | None = None) -> str:
 
     Raises:
         ClaudeError: If Claude CLI fails or returns an error
-        subprocess.TimeoutExpired: If the command times out
+        subprocess.TimeoutExpired: If the command times out (only if timeout is set)
         FileNotFoundError: If Claude binary is not found
     """
     binary = find_claude_binary()

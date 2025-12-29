@@ -29,7 +29,6 @@ One command checks your dependencies, scans for vulnerabilities, and validates l
 - **SARIF Output**: GitHub Code Scanning and VS Code integration
 - **Monorepo Support**: Auto-detect workspaces, recursive scanning by default
 - **Development Tools Checking**: Verify Node, Python, Rust, Dart, Flutter, uv, Docker are up to date
-- **Interactive Guide**: TUI dashboard with real-time health monitoring
 - **Deprecation Detection**: Scan and auto-fix deprecated API usage (Flutter/Dart)
 - **AI-Powered Suggestions**: Claude Code integration for intelligent upgrade strategies
 - **Beautiful CLI**: Rich output with tables, progress bars, and colors
@@ -63,7 +62,6 @@ depswiz sbom        # Generate SBOM
 depswiz update      # Update dependencies interactively
 depswiz tools       # Check development tools
 depswiz suggest     # AI-powered suggestions (requires Claude Code)
-depswiz guide       # Launch interactive dashboard
 depswiz deprecations  # Scan for deprecated APIs (Flutter/Dart)
 ```
 
@@ -161,18 +159,6 @@ depswiz suggest --focus quick    # Quick health summary
 ```
 
 **Note:** Requires [Claude Code CLI](https://claude.ai/code) to be installed.
-
-### `depswiz guide`
-
-Interactive dependency management dashboard.
-
-```bash
-depswiz guide                    # Launch TUI dashboard
-depswiz guide --mode wizard      # Step-by-step wizard
-depswiz guide --mode chat        # Conversational mode
-```
-
-**Keyboard Shortcuts:** `a`=Audit, `u`=Updates, `l`=Licenses, `t`=Tools, `c`=Chat, `s`=AI, `q`=Quit
 
 ### `depswiz deprecations`
 
@@ -342,5 +328,4 @@ MIT License - see [LICENSE](LICENSE) for details.
 - [OSV](https://osv.dev/), [NVD](https://nvd.nist.gov/), and [GitHub Advisories](https://github.com/advisories) for vulnerability data
 - [CycloneDX](https://cyclonedx.org/) and [SPDX](https://spdx.dev/) for SBOM standards
 - [SARIF](https://sarifweb.azurewebsites.net/) for static analysis result format
-- [Rich](https://github.com/Textualize/rich), [Typer](https://typer.tiangolo.com/), and [Textual](https://textual.textualize.io/) for beautiful CLI and TUI
-- [InquirerPy](https://github.com/kazhala/InquirerPy) for interactive prompts
+- [Rich](https://github.com/Textualize/rich) and [Typer](https://typer.tiangolo.com/) for beautiful CLI

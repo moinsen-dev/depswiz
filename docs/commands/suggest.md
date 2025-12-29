@@ -31,7 +31,7 @@ npm install -g @anthropic-ai/claude-code
 | Option | Description |
 |--------|-------------|
 | `--focus`, `-f` | Analysis focus: upgrade, security, breaking, quick, toolchain |
-| `--timeout`, `-t` | Timeout in seconds (default: 300) |
+| `--timeout`, `-t` | Timeout in seconds (default: no timeout) |
 | `--raw` | Output raw response without formatting |
 | `--prompt`, `-p` | Generate an AI coding agent prompt file (no Claude required) |
 | `--prompt-output`, `-po` | Output path for the prompt file |
@@ -204,7 +204,7 @@ Configure Claude integration in `depswiz.toml`:
 ```toml
 [claude]
 enabled = true
-timeout_seconds = 300
+# timeout_seconds = 300  # Optional: set a timeout in seconds (default: no timeout)
 ```
 
 ## Tips
@@ -227,11 +227,15 @@ Install from: https://claude.ai/cli
 
 ### Timeout errors
 
+If you set a custom timeout with `--timeout` and it's too short:
+
 ```
-Claude timed out after 300 seconds
+Claude timed out after 60 seconds
 ```
 
-**Solution:** Increase timeout with `--timeout 600` for large projects.
+**Solution:** Increase timeout with `--timeout 600` for large projects, or remove the `--timeout` flag to run without a timeout limit.
+
+Note: By default, there is no timeout, so this error only occurs if you explicitly set one.
 
 ### Permission issues
 

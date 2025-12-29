@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Suggest Command**: Removed default 300-second timeout; now runs without timeout by default
+  - Use `--timeout` flag to set a custom timeout if needed
+
+### Removed
+
+- **Guide Command**: Removed the `depswiz guide` interactive TUI dashboard
+  - Removed `textual` and `inquirerpy` dependencies
+  - Removed wizard mode and chat mode features
+  - Focus on CLI-first workflow with existing commands
+
 ## [0.5.0] - 2025-12-28
 
 ### Added

@@ -94,7 +94,6 @@ depswiz audit       # Scan for security vulnerabilities
 depswiz licenses    # Check license compliance
 depswiz tools       # Check development tools
 depswiz suggest     # Get AI-powered suggestions (requires Claude Code)
-depswiz guide       # Launch interactive dashboard
 depswiz deprecations  # Scan for deprecated APIs (Flutter/Dart)
 ```
 

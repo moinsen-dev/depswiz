@@ -292,4 +292,4 @@ Support for additional languages is planned:
 
 - [check](check.md) - Check for outdated dependencies
 - [audit](audit.md) - Vulnerability scanning
-- [guide](guide.md) - Interactive dashboard
+- [suggest](suggest.md) - AI-powered suggestions
